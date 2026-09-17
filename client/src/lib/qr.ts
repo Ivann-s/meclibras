@@ -10,12 +10,12 @@ export function slugify(value: string) {
     .replace(/(^-|-$)/g, "") || "item";
 }
 
-export function getPublicItemUrl(slug: string) {
-  const configuredBase = import.meta.env.VITE_PUBLIC_BASE_URL;
+export function getPublicItemUrl(slug: string ) {
+  const configuredBase = import.meta.env.VITE_PUBLIC_BASE_URL
+    ?.trim()
+    .replace(/\/$/, "");
 
-  const base =
-    configuredBase?.replace(/\/$/, "") ||
-    window.location.origin;
+  const base = configuredBase || window.location.origin;
 
   return `${base}/m/${slug}`;
 }
