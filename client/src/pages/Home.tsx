@@ -667,7 +667,7 @@ export default function Home() {
   {loadingSuggestions ? <div className="empty-state"><p>Carregando sugestões...</p></div> : suggestions.length === 0 ? <div className="empty-state"><p>Ainda não há sugestões recebidas.</p></div> : <div className="suggestions-admin-list">
     {suggestions.map((suggestion) => <article className="suggestion-admin-card" key={suggestion.id}>
       <div className="suggestion-admin-card__header">
-        <div><span className="eyebrow">SUGESTÃO</span><h3>{suggestion.machines?.[0]?.name ?? "Máquina não identificada"}</h3></div>
+        <div><span className="eyebrow">SUGESTÃO RECEBIDA</span><h3>Feedback de usuário</h3></div>
         <select value={suggestion.status} onChange={async (event) => {
           const nextStatus = event.target.value as "new" | "read" | "resolved";
           try {
@@ -687,7 +687,7 @@ export default function Home() {
       <p className="suggestion-admin-card__message">{suggestion.message}</p>
       <div className="suggestion-admin-card__meta">
         <span>Enviada em {new Date(suggestion.created_at).toLocaleString("pt-BR")}</span>
-        {suggestion.user_name && <span>Nome: {suggestion.user_name}</span>}
+        <span>Por {suggestion.user_name?.trim() || "usuário sem identificação"}</span>
         {suggestion.user_contact && <span>Contato: {suggestion.user_contact}</span>}
       </div>
     </article>)}
