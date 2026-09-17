@@ -114,7 +114,6 @@ export async function createMachine(input: {
 
   return data;
 }
-
 export async function createSuggestion(input: {
   machineId?: string;
   message: string;
@@ -125,19 +124,18 @@ export async function createSuggestion(input: {
     throw new Error("Supabase não está configurado.");
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("suggestions")
     .insert({
       machine_id: input.machineId || null,
       message: input.message.trim(),
       user_name: input.userName?.trim() || null,
       user_contact: input.userContact?.trim() || null,
-    })
-    .select()
-    .single();
+    });
 
-  if (error) throw error;
-  return data;
+  if (error) {
+    throw error;
+  }
 }
 
 export async function getSuggestions() {
