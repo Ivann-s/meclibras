@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import {
+  createSuggestion,
   getPublishedMachines,
   getSuggestions,
   updateSuggestionStatus,
@@ -316,6 +317,51 @@ function VideoPlayer({ machine }: { machine: Machine }) {
   );
 }
 
+function SuggestionForm({ machineId }: { machineId: string }) {
+  const [message, setMessage] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userContact, setUserContact] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function submitSuggestion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (message.trim().length < 5) {
+      toast.error("Escreva uma sugestão com pelo menos 5 caracteres.");
+      return;
+    }
+    setSending(true);
+    try {
+      await createSuggestion({ machineId, message, userName, userContact });
+      setMessage("");
+      setUserName("");
+      setUserContact("");
+      toast.success("Sugestão enviada", { description: "Obrigado por ajudar a melhorar o conteúdo." });
+    } catch (error) {
+      console.error("Erro ao enviar sugestão:", error);
+      toast.error("Não foi possível enviar a sugestão.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <section className="suggestion-section">
+      <div className="eyebrow">PARTICIPE DA MELHORIA</div>
+      <h2>Envie uma sugestão</h2>
+      <p>Encontrou algum problema ou tem uma ideia para melhorar este conteúdo?</p>
+      <form className="suggestion-form" onSubmit={submitSuggestion}>
+        <label htmlFor={`suggestion-message-${machineId}`}>Sua sugestão <span>*</span></label>
+        <textarea id={`suggestion-message-${machineId}`} required minLength={5} maxLength={1000} rows={5} value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Digite sua sugestão, dúvida ou relato..." />
+        <label htmlFor={`suggestion-name-${machineId}`}>Seu nome <small>(opcional)</small></label>
+        <input id={`suggestion-name-${machineId}`} value={userName} onChange={(event) => setUserName(event.target.value)} maxLength={120} placeholder="Como podemos chamar você?" />
+        <label htmlFor={`suggestion-contact-${machineId}`}>E-mail ou contato <small>(opcional)</small></label>
+        <input id={`suggestion-contact-${machineId}`} value={userContact} onChange={(event) => setUserContact(event.target.value)} maxLength={160} placeholder="Se quiser receber um retorno" />
+        <button className="button button--dark" type="submit" disabled={sending}>{sending ? "Enviando..." : "Enviar sugestão"}</button>
+      </form>
+    </section>
+  );
+}
+
 function HistoryCard({ machine, onOpen }: { machine: Machine; onOpen: (machine: Machine) => void }) {
   return (
     <button className="history-card" onClick={() => onOpen(machine)}>
@@ -601,13 +647,14 @@ export default function Home() {
               ); toast.success("Link público copiado", { description: "Esse é o endereço que fica dentro do QR Code." });
             }}><Copy size={16} /> Copiar link do QR</button></div>
             <div className="detail-layout"><div><VideoPlayer machine={selectedMachine} /><div className="video-note"><BadgeCheck size={17} /><span>Vídeo revisado com consultoria em Libras</span><span className="note-separator">·</span><span>Legenda disponível</span></div></div><aside className="detail-aside"><div className="aside-label">SOBRE ESTE VÍDEO</div><h2>O essencial, sem complicar.</h2><p>{selectedMachine.subtitle}. O conteúdo foi pensado para consulta rápida no chão de fábrica.</p><div className="step-list">{selectedMachine.steps.map((step, index) => <div className="step-item" key={step}><span>{String(index + 1).padStart(2, "0")}</span><p>{step}</p><Check size={15} /></div>)}</div><button className="button button--dark button--wide" onClick={() => toast.success("Salvo no seu histórico", { description: "Você pode continuar de onde parou." })}><BookmarkIcon /> Salvar para rever depois</button></aside></div>
+            <SuggestionForm machineId={selectedMachine.id} />
             <section className="related-section"><div className="section-heading"><div><div className="eyebrow">CONTINUE EXPLORANDO</div><h2>Outras máquinas</h2></div><button className="text-link" onClick={() => { setSelectedMachine(null); setActiveTab("explore"); }}>Ver todas <ArrowUpRight size={16} /></button></div><div className="machine-grid machine-grid--related">{machines.filter((machine) => machine.id !== selectedMachine.id).slice(0, 3).map((machine) => <MachineCard key={machine.id} machine={machine} onOpen={openMachine} />)}</div></section>
           </div>
         </main>
       ) : activeTab === "admin" && !adminAuthed ? (
         <AdminLogin onLogin={handleLogin} onBack={() => navigateTo("explore")} />
       ) : activeTab === "admin" ? (
-        <main className="admin-page"><div className="container"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> PAINEL PRIVADO · ADMIN</div><h1>Cadastre uma nova máquina.</h1><p>Crie o perfil, associe o vídeo em Libras e gere um QR pronto para imprimir.</p></div><div className="intro-icon"><Settings2 size={25} /></div></div><div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>01</span><strong>Você cadastra</strong><small>máquina + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2>Informações da máquina</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome da máquina<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição curta<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label><label>Duração do vídeo<input value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder="04:30" /></label></div><div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div><button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><section className="suggestions-admin-section">
+        <main className="admin-page"><div className="container"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> PAINEL PRIVADO · ADMIN</div><h1>Cadastre uma nova máquina.</h1><p>Crie o perfil, associe o vídeo em Libras e gere um QR pronto para imprimir.</p></div><div className="intro-icon"><Settings2 size={25} /></div></div><div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>01</span><strong>Você cadastra</strong><small>máquina + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2>Informações da máquina</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome da máquina<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição curta<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label><label>Duração do vídeo<input value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder="04:30" /></label></div><div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div><button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code da máquina</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desta máquina. Cada novo cadastro recebe um slug e QR diferente.</span></div></div></div><section className="suggestions-admin-section">
   <div className="section-heading">
     <div>
       <div className="eyebrow">FEEDBACK DOS USUÁRIOS</div>
@@ -645,7 +692,7 @@ export default function Home() {
       </div>
     </article>)}
   </div>}
-</section><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code da máquina</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desta máquina. Cada novo cadastro recebe um slug e QR diferente.</span></div></div></div></div></main>
+</section></div></main>
       ) : (
         <main>
           {activeTab === "explore" && <section className="hero-section"><div className="container hero-grid"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> MECÂNICA QUE INCLUI</div><h1>Aprenda a operar.<br /><em>Do seu jeito.</em></h1><p>Tutoriais em Libras para entender máquinas, trabalhar com segurança e revisar cada etapa quando precisar.</p><div className="hero-actions"><button className="button button--dark" onClick={() => openMachine(machines[0], true)}><QrCode size={17} /> Simular leitura do QR</button><button className="text-link text-link--hero" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>Como funciona <ArrowUpRight size={16} /></button></div><div className="hero-trust"><div className="avatar-stack"><span>AC</span><span>ML</span><span>+</span></div><span>Feito para aprender no ritmo da operação</span></div></div><QrScannerPanel onScan={() => openMachine(machines[0], true)} /></div></section>}
