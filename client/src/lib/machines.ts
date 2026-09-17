@@ -114,6 +114,7 @@ export async function createMachine(input: {
 
   return data;
 }
+
 export async function createSuggestion(input: {
   machineId?: string;
   message: string;
@@ -135,10 +136,7 @@ export async function createSuggestion(input: {
     .select()
     .single();
 
-  if (error) {
-    throw error;
-  }
-
+  if (error) throw error;
   return data;
 }
 
@@ -149,28 +147,18 @@ export async function getSuggestions() {
 
   const { data, error } = await supabase
     .from("suggestions")
-    .select(`
-      id,
-      message,
-      user_name,
-      user_contact,
-      status,
-      created_at,
-      machine_id,
-      machines(name, slug)
-    `)
+    .select(
+      "id, message, user_name, user_contact, status, created_at, machine_id, machines(name, slug)"
+    )
     .order("created_at", { ascending: false });
 
-  if (error) {
-    throw error;
-  }
-
+  if (error) throw error;
   return data ?? [];
 }
 
 export async function updateSuggestionStatus(
   id: string,
-  status: "new" | "read" | "resolved"
+  status: "new" | "read" | "resolved",
 ) {
   if (!supabase) {
     throw new Error("Supabase não está configurado.");
@@ -181,8 +169,5 @@ export async function updateSuggestionStatus(
     .update({ status })
     .eq("id", id);
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 }
-
