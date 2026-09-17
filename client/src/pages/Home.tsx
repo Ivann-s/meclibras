@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import { getPublishedMachines, uploadMachineVideo } from "../lib/machines";
 
 
-
 import {
   Accessibility,
   ArrowLeft,
@@ -35,14 +34,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import {
-  createQrData,
-  downloadDataUrl,
-  downloadSvg,
-  getPublicItemUrl,
-  slugify,
-} from "@/lib/qr";
-
+import { createQrData, downloadDataUrl, downloadSvg, slugify } from "@/lib/qr";
 import { getProfile, supabase, supabaseConfigured } from "@/lib/supabase";
 
 type Machine = {
@@ -280,29 +272,29 @@ function VideoPlayer({ machine }: { machine: Machine }) {
         </video>
       ) : null}
       {!machine.videoUrl && <>
-        <div className="video-player__ambient" />
-        <div className="video-player__grid" />
-        <div className="video-player__topbar"><span className="video-live-dot" /> VÍDEO EM LIBRAS <span>·</span> {machine.duration}</div>
-        <div className="video-player__figure">
-          <div className="signer-head" />
-          <div className="signer-body" />
-          <div className="signer-hand signer-hand--left" />
-          <div className="signer-hand signer-hand--right" />
-          <div className="signer-caption">Olá! Neste vídeo você vai aprender a operar esta máquina com segurança.</div>
-        </div>
-        <div className="video-player__center">
-          <button className="video-play" onClick={() => setPlaying((value) => !value)} aria-label={playing ? "Pausar vídeo" : "Reproduzir vídeo"}>
-            {playing ? <span className="pause-bars"><i /><i /></span> : <Play size={28} fill="currentColor" />}
-          </button>
-          <span>{playing ? "Reproduzindo demonstração" : "Assistir demonstração"}</span>
-        </div>
-        <div className="video-player__controls">
-          <button onClick={() => setPlaying((value) => !value)} aria-label={playing ? "Pausar" : "Reproduzir"}>{playing ? <span className="pause-bars pause-bars--small"><i /><i /></span> : <Play size={15} fill="currentColor" />}</button>
-          <div className="video-progress"><span style={{ width: playing ? "34%" : "8%" }} /></div>
-          <span>00:48 / {machine.duration}</span>
-          <button onClick={() => setCaptions((value) => !value)} className={captions ? "control-active" : ""} aria-label="Alternar legendas">CC</button>
-          <button aria-label="Volume"><Volume2 size={15} /></button>
-        </div>
+      <div className="video-player__ambient" />
+      <div className="video-player__grid" />
+      <div className="video-player__topbar"><span className="video-live-dot" /> VÍDEO EM LIBRAS <span>·</span> {machine.duration}</div>
+      <div className="video-player__figure">
+        <div className="signer-head" />
+        <div className="signer-body" />
+        <div className="signer-hand signer-hand--left" />
+        <div className="signer-hand signer-hand--right" />
+        <div className="signer-caption">Olá! Neste vídeo você vai aprender a operar esta máquina com segurança.</div>
+      </div>
+      <div className="video-player__center">
+        <button className="video-play" onClick={() => setPlaying((value) => !value)} aria-label={playing ? "Pausar vídeo" : "Reproduzir vídeo"}>
+          {playing ? <span className="pause-bars"><i /><i /></span> : <Play size={28} fill="currentColor" />}
+        </button>
+        <span>{playing ? "Reproduzindo demonstração" : "Assistir demonstração"}</span>
+      </div>
+      <div className="video-player__controls">
+        <button onClick={() => setPlaying((value) => !value)} aria-label={playing ? "Pausar" : "Reproduzir"}>{playing ? <span className="pause-bars pause-bars--small"><i /><i /></span> : <Play size={15} fill="currentColor" />}</button>
+        <div className="video-progress"><span style={{ width: playing ? "34%" : "8%" }} /></div>
+        <span>00:48 / {machine.duration}</span>
+        <button onClick={() => setCaptions((value) => !value)} className={captions ? "control-active" : ""} aria-label="Alternar legendas">CC</button>
+        <button aria-label="Volume"><Volume2 size={15} /></button>
+      </div>
       </>}
     </div>
   );
@@ -563,12 +555,10 @@ export default function Home() {
           <div className="container">
             <button className="back-link" onClick={() => setSelectedMachine(null)}><ArrowLeft size={16} /> Voltar para explorar</button>
             <div className="detail-heading"><div><div className="eyebrow"><span className="eyebrow-dot" /> PÁGINA PÚBLICA DA MÁQUINA</div><h1>{selectedMachine.name}</h1><p>{selectedMachine.description}</p><div className="public-url"><QrCode size={14} /><span>
-              {getPublicItemUrl(selectedMachine.slug || selectedMachine.id)}
+              {window.location.origin}/m/{selectedMachine.slug ?? selectedMachine.id}
             </span><strong>aberto pelo QR</strong></div></div><button className="outline-button" onClick={() => {
-              navigator.clipboard?.writeText(
-                getPublicItemUrl(selectedMachine.slug ?? selectedMachine.id)
-              );
-              toast.success("Link público copiado", { description: "Esse é o endereço que fica dentro do QR Code." });
+              navigator.clipboard?.writeText(`${window.location.origin}/m/${selectedMachine.slug ?? selectedMachine.id}`
+              ); toast.success("Link público copiado", { description: "Esse é o endereço que fica dentro do QR Code." });
             }}><Copy size={16} /> Copiar link do QR</button></div>
             <div className="detail-layout"><div><VideoPlayer machine={selectedMachine} /><div className="video-note"><BadgeCheck size={17} /><span>Vídeo revisado com consultoria em Libras</span><span className="note-separator">·</span><span>Legenda disponível</span></div></div><aside className="detail-aside"><div className="aside-label">SOBRE ESTE VÍDEO</div><h2>O essencial, sem complicar.</h2><p>{selectedMachine.subtitle}. O conteúdo foi pensado para consulta rápida no chão de fábrica.</p><div className="step-list">{selectedMachine.steps.map((step, index) => <div className="step-item" key={step}><span>{String(index + 1).padStart(2, "0")}</span><p>{step}</p><Check size={15} /></div>)}</div><button className="button button--dark button--wide" onClick={() => toast.success("Salvo no seu histórico", { description: "Você pode continuar de onde parou." })}><BookmarkIcon /> Salvar para rever depois</button></aside></div>
             <section className="related-section"><div className="section-heading"><div><div className="eyebrow">CONTINUE EXPLORANDO</div><h2>Outras máquinas</h2></div><button className="text-link" onClick={() => { setSelectedMachine(null); setActiveTab("explore"); }}>Ver todas <ArrowUpRight size={16} /></button></div><div className="machine-grid machine-grid--related">{machines.filter((machine) => machine.id !== selectedMachine.id).slice(0, 3).map((machine) => <MachineCard key={machine.id} machine={machine} onOpen={openMachine} />)}</div></section>
