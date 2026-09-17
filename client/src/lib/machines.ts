@@ -114,3 +114,75 @@ export async function createMachine(input: {
 
   return data;
 }
+export async function createSuggestion(input: {
+  machineId?: string;
+  message: string;
+  userName?: string;
+  userContact?: string;
+}) {
+  if (!supabase) {
+    throw new Error("Supabase não está configurado.");
+  }
+
+  const { data, error } = await supabase
+    .from("suggestions")
+    .insert({
+      machine_id: input.machineId || null,
+      message: input.message.trim(),
+      user_name: input.userName?.trim() || null,
+      user_contact: input.userContact?.trim() || null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function getSuggestions() {
+  if (!supabase) {
+    throw new Error("Supabase não está configurado.");
+  }
+
+  const { data, error } = await supabase
+    .from("suggestions")
+    .select(`
+      id,
+      message,
+      user_name,
+      user_contact,
+      status,
+      created_at,
+      machine_id,
+      machines(name, slug)
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function updateSuggestionStatus(
+  id: string,
+  status: "new" | "read" | "resolved"
+) {
+  if (!supabase) {
+    throw new Error("Supabase não está configurado.");
+  }
+
+  const { error } = await supabase
+    .from("suggestions")
+    .update({ status })
+    .eq("id", id);
+
+  if (error) {
+    throw error;
+  }
+}
+

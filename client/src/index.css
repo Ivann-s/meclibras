@@ -304,3 +304,58 @@ body { background: var(--mec-cream); }
 .video-placeholder { display: grid; min-height: 240px; place-items: center; border-radius: 18px; background: #f2f2f2; color: #5a3218; padding: 24px; text-align: center; }
 .public-instructions { margin-top: 28px; }
 .public-instructions li { margin: 10px 0; }
+.suggestion-section {
+  margin: 64px 0 32px;
+  padding: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.suggestion-section h2 {
+  margin: 8px 0 12px;
+}
+
+.suggestion-form {
+  display: grid;
+  gap: 10px;
+  max-width: 720px;
+  margin-top: 24px;
+}
+
+.suggestion-form label {
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+.suggestion-form label span {
+  color: #d94f00;
+}
+
+.suggestion-form label small {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.suggestion-form input,
+.suggestion-form textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font: inherit;
+  color: #1f2937;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.suggestion-form textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.suggestion-form button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
