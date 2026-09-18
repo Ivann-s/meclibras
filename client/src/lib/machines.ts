@@ -115,6 +115,38 @@ export async function createMachine(input: {
   return data;
 }
 
+export async function updateMachine(
+  id: string,
+  input: {
+    name: string;
+    item_type: string;
+    description: string;
+    content_type: "video" | "text";
+    text_content?: string | null;
+  },
+) {
+  if (!supabase) {
+    throw new Error("Supabase não está configurado.");
+  }
+
+  const { data, error } = await supabase
+    .from("machines")
+    .update({
+      name: input.name.trim(),
+      item_type: input.item_type,
+      description: input.description.trim(),
+      content_type: input.content_type,
+      text_content: input.content_type === "text" ? input.text_content?.trim() || null : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("id, name, slug, item_type, description, instructions, content_type, text_content, video_url, subtitle_url, status")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export async function createSuggestion(input: {
   machineId?: string;
   message: string;
