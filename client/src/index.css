@@ -793,3 +793,77 @@ body { background: var(--mec-cream); }
     width: 100%;
   }
 }
+
+
+/* Ajustes finais dos materiais e dos cards administrativos */
+.material-type-options label,
+.edit-material-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.material-type-options input[type="radio"],
+.edit-material-options input[type="radio"] {
+  flex: 0 0 16px;
+  width: 16px;
+  min-width: 16px;
+  max-width: 16px;
+  height: 16px;
+  min-height: 16px;
+  max-height: 16px;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
+  padding: 0;
+  border-radius: 50%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #ffffff;
+  border: 2px solid #aeb8ae;
+}
+
+.material-type-options input[type="radio"]::before,
+.edit-material-options input[type="radio"]::before {
+  display: none;
+  content: none;
+}
+
+.material-type-options input[type="radio"]:checked,
+.edit-material-options input[type="radio"]:checked {
+  border-color: #d9ef4d;
+  background: #d9ef4d;
+}
+
+.published-machines-admin-grid .published-machine-admin-card {
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid #e1e8df;
+  border-radius: 11px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(36,57,44,.025);
+}
+
+.published-machines-admin-grid .published-machine-admin-card:hover {
+  border-color: #ccdbcd;
+  box-shadow: 0 15px 32px rgba(36,57,44,.09);
+  transform: translateY(-3px);
+}
+
+.published-machines-admin-grid .machine-card__visual-button {
+  display: block;
+  cursor: default;
+}
+
+.published-machines-admin-grid .machine-card__body {
+  padding: 16px 17px 17px;
+}
+
+.published-machines-admin-grid .machine-card__body h3 {
+  margin: 8px 0 4px;
+  color: #263630;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.1;
+}
