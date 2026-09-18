@@ -57,6 +57,8 @@ type Machine = {
   description: string;
   steps: string[];
   videoUrl?: string;
+  contentType?: "video" | "text";
+  textContent?: string;
 };
 
 type Suggestion = {
@@ -409,7 +411,7 @@ export default function Home() {
   const [adminAuthed, setAdminAuthed] = useState(false);
   const [userAuthed, setUserAuthed] = useState(false);
   const [createdSlug, setCreatedSlug] = useState("");
-  const [form, setForm] = useState({ name: "", category: "Produção", subtitle: "", duration: "" });
+  const [form, setForm] = useState({ name: "", category: "Produção", subtitle: "", duration: "", contentType: "video" as "video" | "text", textContent: "" });
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
@@ -446,6 +448,8 @@ export default function Home() {
                 .filter(Boolean)
               : [],
           videoUrl: machine.video_url ?? "",
+          contentType: machine.content_type ?? (machine.video_url ? "video" : "text"),
+          textContent: machine.text_content ?? "",
         }));
 
 
@@ -508,6 +512,14 @@ export default function Home() {
     }
     const generatedSlug = slugify(form.name);
     let uploadedVideoUrl = "";
+    if (form.contentType === "text" && !form.textContent.trim()) {
+      toast.error("Digite o material explicativo antes de cadastrar.");
+      return;
+    }
+    if (form.contentType === "video" && !videoFile) {
+      toast.error("Selecione um vídeo ou escolha Material em texto.");
+      return;
+    }
 
     if (supabaseConfigured && supabase) {
       const { data: { user } } = await supabase.auth.getUser();
@@ -520,6 +532,8 @@ export default function Home() {
         name: form.name,
         item_type: form.category,
         description: form.subtitle,
+        content_type: form.contentType,
+        text_content: form.contentType === "text" ? form.textContent : null,
         status: "published",
         created_by: user.id,
       }).select("id, slug").single();
@@ -528,7 +542,7 @@ export default function Home() {
         return;
       }
 
-      if (videoFile) {
+      if (videoFile && form.contentType === "video") {
         try {
           const uploadedMachine = await uploadMachineVideo(generatedSlug, videoFile);
           uploadedVideoUrl = uploadedMachine.video_url ?? "";
@@ -552,10 +566,12 @@ export default function Home() {
       description: `Vídeo introdutório em Libras sobre ${form.name}.`,
       steps: ["Apresente a máquina", "Explique os controles", "Mostre o procedimento seguro"],
       videoUrl: uploadedVideoUrl,
+      contentType: form.contentType,
+      textContent: form.textContent,
     };
     setMachines((current) => [newMachine, ...current]);
     setCreatedSlug(generatedSlug);
-    setForm({ name: "", category: "Produção", subtitle: "", duration: "" });
+    setForm({ name: "", category: "Produção", subtitle: "", duration: "", contentType: "video", textContent: "" });
     setVideoFile(null);
     toast.success("Máquina cadastrada", { description: supabaseConfigured ? "Salva no Supabase e pronta para receber o vídeo." : "Salva no modo demo. Configure o Supabase para persistir online." });
   };
@@ -646,7 +662,7 @@ export default function Home() {
               navigator.clipboard?.writeText(getPublicItemUrl(selectedMachine.slug ?? selectedMachine.id)
               ); toast.success("Link público copiado", { description: "Esse é o endereço que fica dentro do QR Code." });
             }}><Copy size={16} /> Copiar link do QR</button></div>
-            <div className="detail-layout"><div><VideoPlayer machine={selectedMachine} /><div className="video-note"><BadgeCheck size={17} /><span>Vídeo revisado com consultoria em Libras</span><span className="note-separator">·</span><span>Legenda disponível</span></div></div><aside className="detail-aside"><div className="aside-label">SOBRE ESTE VÍDEO</div><h2>O essencial, sem complicar.</h2><p>{selectedMachine.subtitle}. O conteúdo foi pensado para consulta rápida no chão de fábrica.</p><div className="step-list">{selectedMachine.steps.map((step, index) => <div className="step-item" key={step}><span>{String(index + 1).padStart(2, "0")}</span><p>{step}</p><Check size={15} /></div>)}</div><button className="button button--dark button--wide" onClick={() => toast.success("Salvo no seu histórico", { description: "Você pode continuar de onde parou." })}><BookmarkIcon /> Salvar para rever depois</button></aside></div>
+            {selectedMachine.contentType === "text" ? <section className="text-material-public"><div className="eyebrow">MATERIAL DIDÁTICO</div><h2>Orientações e procedimento</h2><div className="text-material-public__body">{selectedMachine.textContent}</div></section> : <div className="detail-layout"><div><VideoPlayer machine={selectedMachine} /><div className="video-note"><BadgeCheck size={17} /><span>Vídeo revisado com consultoria em Libras</span><span className="note-separator">·</span><span>Legenda disponível</span></div></div><aside className="detail-aside"><div className="aside-label">SOBRE ESTE VÍDEO</div><h2>O essencial, sem complicar.</h2><p>{selectedMachine.subtitle}. O conteúdo foi pensado para consulta rápida no chão de fábrica.</p><div className="step-list">{selectedMachine.steps.map((step, index) => <div className="step-item" key={step}><span>{String(index + 1).padStart(2, "0")}</span><p>{step}</p><Check size={15} /></div>)}</div><button className="button button--dark button--wide" onClick={() => toast.success("Salvo no seu histórico", { description: "Você pode continuar de onde parou." })}><BookmarkIcon /> Salvar para rever depois</button></aside></div>}
             <SuggestionForm machineId={selectedMachine.id} />
             <section className="related-section"><div className="section-heading"><div><div className="eyebrow">CONTINUE EXPLORANDO</div><h2>Outras máquinas</h2></div><button className="text-link" onClick={() => { setSelectedMachine(null); setActiveTab("explore"); }}>Ver todas <ArrowUpRight size={16} /></button></div><div className="machine-grid machine-grid--related">{machines.filter((machine) => machine.id !== selectedMachine.id).slice(0, 3).map((machine) => <MachineCard key={machine.id} machine={machine} onOpen={openMachine} />)}</div></section>
           </div>
@@ -654,7 +670,7 @@ export default function Home() {
       ) : activeTab === "admin" && !adminAuthed ? (
         <AdminLogin onLogin={handleLogin} onBack={() => navigateTo("explore")} />
       ) : activeTab === "admin" ? (
-        <main className="admin-page"><div className="container"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> PAINEL PRIVADO · ADMIN</div><h1>Cadastre uma nova máquina.</h1><p>Crie o perfil, associe o vídeo em Libras e gere um QR pronto para imprimir.</p></div><div className="intro-icon"><Settings2 size={25} /></div></div><div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>01</span><strong>Você cadastra</strong><small>máquina + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2>Informações da máquina</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome da máquina<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição curta<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label><label>Duração do vídeo<input value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder="04:30" /></label></div><div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div><button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code da máquina</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desta máquina. Cada novo cadastro recebe um slug e QR diferente.</span></div></div></div><section className="suggestions-admin-section">
+        <main className="admin-page"><div className="container"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> PAINEL PRIVADO · ADMIN</div><h1>Cadastre uma nova máquina.</h1><p>Crie o perfil, associe o vídeo em Libras e gere um QR pronto para imprimir.</p></div><div className="intro-icon"><Settings2 size={25} /></div></div><div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>01</span><strong>Você cadastra</strong><small>máquina + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2>Informações da máquina</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome da máquina<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição curta<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label><label>Duração do vídeo<input value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder="04:30" /></label></div><div className="material-type-selector"><strong>Tipo de material didático</strong><div className="material-type-options"><label><input type="radio" name="contentType" value="video" checked={form.contentType === "video"} onChange={() => setForm({ ...form, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="contentType" value="text" checked={form.contentType === "text"} onChange={() => setForm({ ...form, contentType: "text" })} /> Texto explicativo</label></div></div>{form.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label className="text-material-field">Material explicativo<textarea value={form.textContent} onChange={(event) => setForm({ ...form, textContent: event.target.value })} placeholder="Digite aqui o conteúdo didático, as orientações e os procedimentos de segurança..." rows={10} /></label>}<button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code da máquina</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desta máquina. Cada novo cadastro recebe um slug e QR diferente.</span></div></div></div><section className="suggestions-admin-section">
   <div className="section-heading">
     <div>
       <div className="eyebrow">FEEDBACK DOS USUÁRIOS</div>

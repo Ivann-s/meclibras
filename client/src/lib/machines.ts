@@ -8,7 +8,7 @@ export async function getPublishedMachines() {
   const { data, error } = await supabase
     .from("machines")
     .select(
-      "id, name, slug, item_type, description, instructions, video_url, subtitle_url, status"
+      "id, name, slug, item_type, description, instructions, content_type, text_content, video_url, subtitle_url, status"
     )
     .eq("status", "published")
     .order("name");
@@ -66,7 +66,7 @@ export async function getMachineBySlug(slug: string) {
   const { data, error } = await supabase
     .from("machines")
     .select(
-      "id, name, slug, item_type, description, instructions, video_url, subtitle_url, status"
+      "id, name, slug, item_type, description, instructions, content_type, text_content, video_url, subtitle_url, status"
     )
     .eq("slug", slug)
     .eq("status", "published")
@@ -114,6 +114,7 @@ export async function createMachine(input: {
 
   return data;
 }
+
 export async function createSuggestion(input: {
   machineId?: string;
   message: string;
@@ -124,18 +125,19 @@ export async function createSuggestion(input: {
     throw new Error("Supabase não está configurado.");
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("suggestions")
     .insert({
       machine_id: input.machineId || null,
       message: input.message.trim(),
       user_name: input.userName?.trim() || null,
       user_contact: input.userContact?.trim() || null,
-    });
+    })
+    .select()
+    .single();
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
+  return data;
 }
 
 export async function getSuggestions() {
