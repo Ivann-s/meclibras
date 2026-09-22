@@ -280,7 +280,7 @@ function VideoPlayer({ machine }: { machine: Machine }) {
   return (
     <div className={`video-player video-player--${machine.accent}`}>
       {machine.videoUrl ? (
-        <video className="machine-video-real" controls playsInline preload="metadata" src={machine.videoUrl}>
+        <video className="machine-video-real" controls playsInline preload="metadata"  poster="/meclibras/video-thumb.png" src={machine.videoUrl}>
           Seu navegador não suporta a reprodução de vídeos.
         </video>
       ) : null}
