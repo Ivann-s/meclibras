@@ -274,7 +274,7 @@ body { background: var(--mec-cream); }
 .play-bubble { background: var(--accent); box-shadow: 0 4px 0 #b6d02a; }
 .machine-visual { border-radius: 17px 17px 0 0; }
 .how-step { border-radius: 17px; box-shadow: 0 5px 0 rgba(25,42,50,.06); }
-.how-step--accent { background: var(--accent); }
+.how-step--accent { background: transparent }
 .admin-login-card, .admin-form, .qr-preview-card { border-radius: 18px; box-shadow: 0 6px 0 rgba(25,42,50,.06), 0 20px 45px rgba(25,42,50,.07); }
 .admin-login-icon, .intro-icon { background: #e6f4df; color: var(--primary); }
 .admin-flow-note { border-radius: 16px; box-shadow: 0 4px 0 rgba(25,42,50,.05); }
