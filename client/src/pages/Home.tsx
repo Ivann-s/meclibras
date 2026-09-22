@@ -374,7 +374,7 @@ function AdminLogin({ onLogin, onBack }: { onLogin: (mode: "admin" | "user", ema
         <div className="eyebrow"><span className="eyebrow-dot" /> {mode === "admin" ? "ÁREA RESTRITA" : "CONTA DE APRENDIZADO"}</div>
         <div className="login-mode-switch"><button type="button" className={mode === "admin" ? "login-mode-switch__active" : ""} onClick={() => setMode("admin")}>Administrador</button><button type="button" className={mode === "user" ? "login-mode-switch__active" : ""} onClick={() => setMode("user")}>Usuário</button></div>
         <h1>{mode === "admin" ? <>Entre para gerenciar<br /><em>seus QRs.</em></> : <>Continue seu<br /><em>aprendizado.</em></>}</h1>
-        <p>{mode === "admin" ? "Somente administradores cadastram máquinas, associam vídeos e geram novas etiquetas." : "Crie uma conta para rever vídeos, salvar máquinas e acompanhar seu histórico."}</p>
+        <p>{mode === "admin" ? "Somente administradores cadastram conteúdos, associam vídeos e geram novas etiquetas." : "Crie uma conta para rever vídeos, salvar conteúdos e acompanhar seu histórico."}</p>
         <form onSubmit={(event) => { event.preventDefault(); onLogin(mode, email, password); }}>
           <label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@empresa.com" required /></label>
           <label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" required /></label>
@@ -499,7 +499,7 @@ export default function Home() {
   const submitMachine = async (event: FormEvent) => {
     event.preventDefault();
     if (!form.name || !form.subtitle) {
-      toast.error("Preencha o nome e a descrição curta da máquina.");
+      toast.error("Preencha o nome e a descrição da conteúdo.");
       return;
     }
     const generatedSlug = slugify(form.name);
@@ -539,7 +539,7 @@ export default function Home() {
           const uploadedMachine = await uploadMachineVideo(generatedSlug, videoFile);
           uploadedVideoUrl = uploadedMachine.video_url ?? "";
         } catch (uploadError) {
-          toast.error("Máquina criada, mas o vídeo não foi enviado", {
+          toast.error("conteúdo criado, mas o vídeo não foi enviado", {
             description: uploadError instanceof Error ? uploadError.message : "Verifique o bucket videos-libras e suas políticas.",
           });
         }
@@ -556,7 +556,7 @@ export default function Home() {
       accent: "lime",
       visual: "press",
       description: `Vídeo introdutório em Libras sobre ${form.name}.`,
-      steps: ["Apresente a máquina", "Explique os controles", "Mostre o procedimento seguro"],
+      steps: ["Apresente o conteúdo", "Explique os controles", "Mostre o procedimento seguro"],
       videoUrl: uploadedVideoUrl,
       contentType: form.contentType,
       textContent: form.textContent,
@@ -565,7 +565,7 @@ export default function Home() {
     setCreatedSlug(generatedSlug);
     setForm({ name: "", category: "Produção", subtitle: "", duration: "", contentType: "video", textContent: "" });
     setVideoFile(null);
-    toast.success("Máquina cadastrada", { description: supabaseConfigured ? "Salva no Supabase e pronta para receber o vídeo." : "Salva no modo demo. Configure o Supabase para persistir online." });
+    toast.success("Conteúdo cadastrado", { description: supabaseConfigured ? "Salva no Supabase e pronta para receber o vídeo." : "Salva no modo demo. Configure o Supabase para persistir online." });
   };
 
   async function saveMachineEdition(event: FormEvent<HTMLFormElement>) {
@@ -602,10 +602,10 @@ export default function Home() {
       setMachines((current) => current.map((machine) => machine.id === converted.id ? converted : machine));
       setEditingMachine(null);
       setEditingVideoFile(null);
-      toast.success("Máquina atualizada.");
+      toast.success("Conteúdo atualizada.");
     } catch (error) {
       console.error("Erro ao editar Conteúdo:", error);
-      toast.error("Não foi possível atualizar a máquina.", {
+      toast.error("Não foi possível atualizar o conteúdo.", {
         description: error instanceof Error ? error.message : "Verifique as permissões do administrador.",
       });
     } finally {
@@ -720,10 +720,10 @@ export default function Home() {
       ) : activeTab === "admin" && !adminAuthed ? (
         <AdminLogin onLogin={handleLogin} onBack={() => navigateTo("explore")} />
       ) : activeTab === "admin" ? (
-        <main className="admin-page"><div className="container"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> PAINEL PRIVADO · ADMIN</div><h1>Cadastre uma novo máquina.</h1><p>Crie o perfil, associe o vídeo em Libras e gere um QR pronto para imprimir.</p></div><div className="intro-icon"><Settings2 size={25} /></div></div><div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>01</span><strong>Você cadastra</strong><small>máquina + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2>Informações da máquina</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome da máquina<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição curta<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label><label className={form.contentType === "text" ? "field-disabled" : ""}>Duração do vídeo<input disabled={form.contentType === "text"} value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder={form.contentType === "text" ? "Não se aplica a texto" : "04:30"} /></label></div><div className="material-type-selector"><strong>Tipo de material didático</strong><div className="material-type-options"><label><input type="radio" name="contentType" value="video" checked={form.contentType === "video"} onChange={() => setForm({ ...form, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="contentType" value="text" checked={form.contentType === "text"} onChange={() => setForm({ ...form, contentType: "text" })} /> Texto explicativo</label></div></div>{form.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label className="text-material-field">Material explicativo<textarea value={form.textContent} onChange={(event) => setForm({ ...form, textContent: event.target.value })} placeholder="Digite aqui o conteúdo didático, as orientações e os procedimentos de segurança..." rows={10} /></label>}<button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code da máquina</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desta máquina. Cada novo cadastro recebe um slug e QR diferente.</span></div></div></div><section className="published-machines-admin-section">
+        <main className="admin-page"><div className="container"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> PAINEL PRIVADO · ADMIN</div><h1>Cadastre uma novo conteúdo</h1><p>Crie o perfil, associe o vídeo em Libras e gere um QR pronto para imprimir.</p></div><div className="intro-icon"><Settings2 size={25} /></div></div><div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>01</span><strong>Você cadastra</strong><small>máquina + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2>Informações do conteúdo</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome do Conteúdo<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label><label className={form.contentType === "text" ? "field-disabled" : ""}>Duração do vídeo<input disabled={form.contentType === "text"} value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder={form.contentType === "text" ? "Não se aplica a texto" : "04:30"} /></label></div><div className="material-type-selector"><strong>Tipo de material didático</strong><div className="material-type-options"><label><input type="radio" name="contentType" value="video" checked={form.contentType === "video"} onChange={() => setForm({ ...form, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="contentType" value="text" checked={form.contentType === "text"} onChange={() => setForm({ ...form, contentType: "text" })} /> Texto explicativo</label></div></div>{form.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label className="text-material-field">Material explicativo<textarea value={form.textContent} onChange={(event) => setForm({ ...form, textContent: event.target.value })} placeholder="Digite aqui o conteúdo didático, as orientações e os procedimentos de segurança..." rows={10} /></label>}<button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code do conteúdo</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desta conteúdo.</span></div></div></div><section className="published-machines-admin-section">
           <div className="section-heading"><div><div className="eyebrow">CONTEÚDOS PUBLICADOS</div><h2>Editar Conteúdo Publicado</h2></div></div>
           <div className="published-machines-admin-grid">
-            {machines.length === 0 ? <div className="empty-state"><p>Nenhuma máquina publicada.</p></div> : machines.map((machine) => <article className="published-machine-admin-card" key={machine.id}>
+            {machines.length === 0 ? <div className="empty-state"><p>Nenhum conteúdo publicado.</p></div> : machines.map((machine) => <article className="published-machine-admin-card" key={machine.id}>
               <MachineVisual machine={machine} />
               <div className="published-machine-admin-card__body"><span className="eyebrow">{machine.category}</span><h3>{machine.name}</h3><p>{machine.contentType === "text" ? "Material didático em texto" : "Vídeo em Libras"}</p><button className="small-outline" type="button" onClick={() => { setEditingMachine({ ...machine }); setEditingVideoFile(null); }}>Editar Conteúdo</button></div>
             </article>)}
@@ -734,8 +734,8 @@ export default function Home() {
               <div className="machine-edit-modal__header"><div><div className="eyebrow">EDITAR CONTEÚDO</div><h2>{editingMachine.name}</h2></div><button className="modal-close" type="button" onClick={() => setEditingMachine(null)} aria-label="Fechar edição"><X size={20} /></button></div>
               <div className="machine-edit-modal__preview"><MachineVisual machine={editingMachine} large /></div>
               <form className="machine-edit-form" onSubmit={saveMachineEdition}>
-                <label>Nome da máquina<input value={editingMachine.name} onChange={(event) => setEditingMachine({ ...editingMachine, name: event.target.value })} required /></label>
-                <label>Descrição curta<input value={editingMachine.subtitle} onChange={(event) => setEditingMachine({ ...editingMachine, subtitle: event.target.value })} required /></label>
+                <label>Nome da conteúdo<input value={editingMachine.name} onChange={(event) => setEditingMachine({ ...editingMachine, name: event.target.value })} required /></label>
+                <label>Descrição<input value={editingMachine.subtitle} onChange={(event) => setEditingMachine({ ...editingMachine, subtitle: event.target.value })} required /></label>
                 <label>Categoria<select value={editingMachine.category} onChange={(event) => setEditingMachine({ ...editingMachine, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label>
                 <div className="edit-material-options"><strong>Material da máquina</strong><label><input type="radio" name="editContentType" checked={editingMachine.contentType === "video"} onChange={() => setEditingMachine({ ...editingMachine, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="editContentType" checked={editingMachine.contentType === "text"} onChange={() => setEditingMachine({ ...editingMachine, contentType: "text" })} /> Texto explicativo</label></div>
                 {editingMachine.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Trocar vídeo em Libras</strong><span>{editingVideoFile ? editingVideoFile.name : "Vídeo atual mantido se nenhum arquivo for escolhido"}</span></div><label className="small-outline upload-file-label">Selecionar vídeo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setEditingVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label>Material explicativo<textarea rows={9} value={editingMachine.textContent ?? ""} onChange={(event) => setEditingMachine({ ...editingMachine, textContent: event.target.value })} required /></label>}
@@ -840,7 +840,7 @@ export default function Home() {
                 ) : (
                   <div className="empty-state">
                     <Search size={22} />
-                    <h3>Nenhuma máquina encontrada</h3>
+                    <h3>Nenhuma conteúdo encontrado</h3>
                     <p>Tente buscar por outro nome ou categoria.</p>
                   </div>
                 )}
