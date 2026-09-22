@@ -185,9 +185,6 @@ function RealQrPreview({ name, savedSlug }: { name: string; savedSlug: string })
 
 function BrandMark() {
   return (
-    <span className="brand-mark" aria-hidden="true">
-
-    </span>
   );
 }
 
