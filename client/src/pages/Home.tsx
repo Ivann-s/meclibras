@@ -186,11 +186,7 @@ function RealQrPreview({ name, savedSlug }: { name: string; savedSlug: string })
 function BrandMark() {
   return (
     <span className="brand-mark" aria-hidden="true">
-      <svg viewBox="0 0 44 44" role="presentation">
-        <circle cx="22" cy="22" r="16" className="brand-mark__gear" />
-        <path d="M15 23.5c2.4-2.2 4.5-3.2 6.3-3.2 2.3 0 3.2 1.6 4.8 1.6 1.1 0 2.2-.6 3.9-2" className="brand-mark__hand" />
-        <path d="M20.7 20.3v-6.1m3.1 6.2v-7m3.1 7.7v-5.6" className="brand-mark__fingers" />
-      </svg>
+
     </span>
   );
 }
