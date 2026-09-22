@@ -183,11 +183,6 @@ function RealQrPreview({ name, savedSlug }: { name: string; savedSlug: string })
   );
 }
 
-function BrandMark() {
-  return (
-  );
-}
-
 function MachineVisual({ machine, large = false }: { machine: Machine; large?: boolean }) {
   return (
     <div className={`machine-visual machine-visual--${machine.accent} ${large ? "machine-visual--large" : ""}`}>
@@ -855,7 +850,7 @@ export default function Home() {
           {activeTab === "history" && <section className="history-page"><div className="container"><div className="history-hero"><div><div className="eyebrow"><span className="eyebrow-dot" /> SEU ESPAÇO DE APRENDIZADO</div><h1>Rever também<br /><em>é aprender.</em></h1><p>Continue de onde parou ou relembre uma operação importante.</p></div><div className="history-score"><div className="score-ring"><span>02</span><small>vídeos</small></div><span>vistos por você</span></div></div><div className="history-list"><div className="section-heading"><div><div className="eyebrow">ATIVIDADE RECENTE</div><h2>Seus vídeos</h2></div><span className="muted-label">Salvo neste dispositivo</span></div>{historyMachines.map((machine) => <HistoryCard key={machine.id} machine={machine} onOpen={openMachine} />)}</div><div className="history-tip"><Sparkles size={19} /><div><strong>Dica de acessibilidade</strong><p>Você não precisa criar uma conta para usar o histórico.</p></div></div></div></section>}
         </main>
       )}
-      <footer className="site-footer"><div className="container footer-inner"><div className="footer-brand"><BrandMark /><span>Mec<span className="brand-accent">Libras</span></span></div><span>MecLibras · 2026</span><div className="footer-links"><button onClick={() => toast.info("Guia de acessibilidade em breve.")}>Acessibilidade</button><button onClick={() => toast.info("Sobre o projeto em breve.")}>Sobre o projeto</button></div></div></footer>
+      <footer className="site-footer"><div className="container footer-inner"><div className="footer-brand"><span>Mec<span className="brand-accent">Libras</span></span></div><span>MecLibras · 2026</span><div className="footer-links"><button onClick={() => toast.info("Guia de acessibilidade em breve.")}>Acessibilidade</button><button onClick={() => toast.info("Sobre o projeto em breve.")}>Sobre o projeto</button></div></div></footer>
     </div>
   );
 }
