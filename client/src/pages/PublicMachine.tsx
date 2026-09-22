@@ -53,7 +53,7 @@ export default function PublicMachine() {
     <main className="detail-page public-machine-page">
       <div className="container">
         <Link className="back-link" href="/">← Voltar para o MecLibras</Link>
-        <div className="eyebrow">PÁGINA PÚBLICA DA MÁQUINA</div>
+        <div className="eyebrow">Conteúdos em LIbras</div>
         <h1>{machine.name}</h1>
         <p>{machine.description}</p>
         {machine.content_type === "text" ? <section className="text-material-public"><div className="eyebrow">MATERIAL DIDÁTICO</div><h2>Orientações e procedimento</h2><div className="text-material-public__body">{machine.text_content || "Nenhum texto explicativo foi cadastrado."}</div></section> : machine.video_url ? <video className="machine-video-real public-video" controls playsInline preload="metadata" poster="/meclibras/video-thumb.png" src={machine.video_url}>Seu navegador não suporta vídeos.</video> : <div className="video-placeholder">Vídeo em Libras ainda não cadastrado.</div>}
