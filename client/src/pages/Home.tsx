@@ -292,29 +292,29 @@ function VideoPlayer({ machine }: { machine: Machine }) {
         </video>
       ) : null}
       {!machine.videoUrl && <>
-      <div className="video-player__ambient" />
-      <div className="video-player__grid" />
-      <div className="video-player__topbar"><span className="video-live-dot" /> VÍDEO EM LIBRAS <span>·</span> {machine.duration}</div>
-      <div className="video-player__figure">
-        <div className="signer-head" />
-        <div className="signer-body" />
-        <div className="signer-hand signer-hand--left" />
-        <div className="signer-hand signer-hand--right" />
-        <div className="signer-caption">Olá! Neste vídeo você vai aprender a operar esta máquina com segurança.</div>
-      </div>
-      <div className="video-player__center">
-        <button className="video-play" onClick={() => setPlaying((value) => !value)} aria-label={playing ? "Pausar vídeo" : "Reproduzir vídeo"}>
-          {playing ? <span className="pause-bars"><i /><i /></span> : <Play size={28} fill="currentColor" />}
-        </button>
-        <span>{playing ? "Reproduzindo demonstração" : "Assistir demonstração"}</span>
-      </div>
-      <div className="video-player__controls">
-        <button onClick={() => setPlaying((value) => !value)} aria-label={playing ? "Pausar" : "Reproduzir"}>{playing ? <span className="pause-bars pause-bars--small"><i /><i /></span> : <Play size={15} fill="currentColor" />}</button>
-        <div className="video-progress"><span style={{ width: playing ? "34%" : "8%" }} /></div>
-        <span>00:48 / {machine.duration}</span>
-        <button onClick={() => setCaptions((value) => !value)} className={captions ? "control-active" : ""} aria-label="Alternar legendas">CC</button>
-        <button aria-label="Volume"><Volume2 size={15} /></button>
-      </div>
+        <div className="video-player__ambient" />
+        <div className="video-player__grid" />
+        <div className="video-player__topbar"><span className="video-live-dot" /> VÍDEO EM LIBRAS <span>·</span> {machine.duration}</div>
+        <div className="video-player__figure">
+          <div className="signer-head" />
+          <div className="signer-body" />
+          <div className="signer-hand signer-hand--left" />
+          <div className="signer-hand signer-hand--right" />
+          <div className="signer-caption">Olá! Neste vídeo você vai aprender a operar esta máquina com segurança.</div>
+        </div>
+        <div className="video-player__center">
+          <button className="video-play" onClick={() => setPlaying((value) => !value)} aria-label={playing ? "Pausar vídeo" : "Reproduzir vídeo"}>
+            {playing ? <span className="pause-bars"><i /><i /></span> : <Play size={28} fill="currentColor" />}
+          </button>
+          <span>{playing ? "Reproduzindo demonstração" : "Assistir demonstração"}</span>
+        </div>
+        <div className="video-player__controls">
+          <button onClick={() => setPlaying((value) => !value)} aria-label={playing ? "Pausar" : "Reproduzir"}>{playing ? <span className="pause-bars pause-bars--small"><i /><i /></span> : <Play size={15} fill="currentColor" />}</button>
+          <div className="video-progress"><span style={{ width: playing ? "34%" : "8%" }} /></div>
+          <span>00:48 / {machine.duration}</span>
+          <button onClick={() => setCaptions((value) => !value)} className={captions ? "control-active" : ""} aria-label="Alternar legendas">CC</button>
+          <button aria-label="Volume"><Volume2 size={15} /></button>
+        </div>
       </>}
     </div>
   );
@@ -691,7 +691,20 @@ export default function Home() {
     <div className="app-shell">
       <header className="site-header">
         <div className="header-inner">
-          <button className="brand" onClick={() => navigateTo("explore")} aria-label="Ir para início"><BrandMark /><span>Mec<span className="brand-accent">Libras</span></span></button>
+          <button
+            className="brand"
+            onClick={() => navigateTo("explore")}
+            aria-label="Ir para início"
+          >
+            <img
+              src="/meclibras/logo.png"
+              alt="MecLibras"
+              className="brand-logo"
+            />
+            <span>
+              Mec<span className="brand-accent">Libras</span>
+            </span>
+          </button>
           <nav className={`main-nav ${mobileMenu ? "main-nav--open" : ""}`}>
             <button className={activeTab === "explore" && !selectedMachine ? "nav-link nav-link--active" : "nav-link"} onClick={() => navigateTo("explore")}><Library size={16} /> Explorar</button>
             <button className={activeTab === "history" && !selectedMachine ? "nav-link nav-link--active" : "nav-link"} onClick={() => navigateTo("history")}><History size={16} /> Meu histórico <span className="nav-count">{history.length}</span></button>
@@ -720,68 +733,68 @@ export default function Home() {
         <AdminLogin onLogin={handleLogin} onBack={() => navigateTo("explore")} />
       ) : activeTab === "admin" ? (
         <main className="admin-page"><div className="container"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> PAINEL PRIVADO · ADMIN</div><h1>Cadastre uma nova máquina.</h1><p>Crie o perfil, associe o vídeo em Libras e gere um QR pronto para imprimir.</p></div><div className="intro-icon"><Settings2 size={25} /></div></div><div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>01</span><strong>Você cadastra</strong><small>máquina + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2>Informações da máquina</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome da máquina<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição curta<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label><label className={form.contentType === "text" ? "field-disabled" : ""}>Duração do vídeo<input disabled={form.contentType === "text"} value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder={form.contentType === "text" ? "Não se aplica a texto" : "04:30"} /></label></div><div className="material-type-selector"><strong>Tipo de material didático</strong><div className="material-type-options"><label><input type="radio" name="contentType" value="video" checked={form.contentType === "video"} onChange={() => setForm({ ...form, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="contentType" value="text" checked={form.contentType === "text"} onChange={() => setForm({ ...form, contentType: "text" })} /> Texto explicativo</label></div></div>{form.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label className="text-material-field">Material explicativo<textarea value={form.textContent} onChange={(event) => setForm({ ...form, textContent: event.target.value })} placeholder="Digite aqui o conteúdo didático, as orientações e os procedimentos de segurança..." rows={10} /></label>}<button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code da máquina</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desta máquina. Cada novo cadastro recebe um slug e QR diferente.</span></div></div></div><section className="published-machines-admin-section">
-  <div className="section-heading"><div><div className="eyebrow">CONTEÚDOS PUBLICADOS</div><h2>Editar máquinas</h2></div></div>
-  <div className="published-machines-admin-grid">
-    {machines.length === 0 ? <div className="empty-state"><p>Nenhuma máquina publicada.</p></div> : machines.map((machine) => <article className="published-machine-admin-card" key={machine.id}>
-      <MachineVisual machine={machine} />
-      <div className="published-machine-admin-card__body"><span className="eyebrow">{machine.category}</span><h3>{machine.name}</h3><p>{machine.contentType === "text" ? "Material didático em texto" : "Vídeo em Libras"}</p><button className="small-outline" type="button" onClick={() => { setEditingMachine({ ...machine }); setEditingVideoFile(null); }}>Editar máquina</button></div>
-    </article>)}
-  </div>
-  {editingMachine && <div className="machine-edit-modal" role="dialog" aria-modal="true" aria-label={`Editar ${editingMachine.name}`}>
-    <div className="machine-edit-modal__backdrop" onClick={() => setEditingMachine(null)} />
-    <div className="machine-edit-modal__card">
-      <div className="machine-edit-modal__header"><div><div className="eyebrow">EDITAR CONTEÚDO</div><h2>{editingMachine.name}</h2></div><button className="modal-close" type="button" onClick={() => setEditingMachine(null)} aria-label="Fechar edição"><X size={20} /></button></div>
-      <div className="machine-edit-modal__preview"><MachineVisual machine={editingMachine} large /></div>
-      <form className="machine-edit-form" onSubmit={saveMachineEdition}>
-        <label>Nome da máquina<input value={editingMachine.name} onChange={(event) => setEditingMachine({ ...editingMachine, name: event.target.value })} required /></label>
-        <label>Descrição curta<input value={editingMachine.subtitle} onChange={(event) => setEditingMachine({ ...editingMachine, subtitle: event.target.value })} required /></label>
-        <label>Categoria<select value={editingMachine.category} onChange={(event) => setEditingMachine({ ...editingMachine, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label>
-        <div className="edit-material-options"><strong>Material da máquina</strong><label><input type="radio" name="editContentType" checked={editingMachine.contentType === "video"} onChange={() => setEditingMachine({ ...editingMachine, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="editContentType" checked={editingMachine.contentType === "text"} onChange={() => setEditingMachine({ ...editingMachine, contentType: "text" })} /> Texto explicativo</label></div>
-        {editingMachine.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Trocar vídeo em Libras</strong><span>{editingVideoFile ? editingVideoFile.name : "Vídeo atual mantido se nenhum arquivo for escolhido"}</span></div><label className="small-outline upload-file-label">Selecionar vídeo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setEditingVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label>Material explicativo<textarea rows={9} value={editingMachine.textContent ?? ""} onChange={(event) => setEditingMachine({ ...editingMachine, textContent: event.target.value })} required /></label>}
-        <div className="machine-edit-modal__actions"><button className="small-outline" type="button" onClick={() => setEditingMachine(null)}>Cancelar</button><button className="button button--dark" type="submit" disabled={savingMachine}>{savingMachine ? "Salvando..." : "Salvar alterações"}</button></div>
-      </form>
-    </div>
-  </div>}
-</section>
-<section className="suggestions-admin-section">
-  <div className="section-heading">
-    <div>
-      <div className="eyebrow">FEEDBACK DOS USUÁRIOS</div>
-      <h2>Sugestões recebidas</h2>
-    </div>
-    <button className="outline-button" type="button" onClick={loadSuggestions} disabled={loadingSuggestions}>
-      {loadingSuggestions ? "Atualizando..." : "Atualizar"}
-    </button>
-  </div>
-  {loadingSuggestions ? <div className="empty-state"><p>Carregando sugestões...</p></div> : suggestions.length === 0 ? <div className="empty-state"><p>Ainda não há sugestões recebidas.</p></div> : <div className="suggestions-admin-list">
-    {suggestions.map((suggestion) => <article className="suggestion-admin-card" key={suggestion.id}>
-      <div className="suggestion-admin-card__header">
-        <div><span className="eyebrow">SUGESTÃO RECEBIDA</span><h3>Feedback de usuário</h3></div>
-        <select value={suggestion.status} onChange={async (event) => {
-          const nextStatus = event.target.value as "new" | "read" | "resolved";
-          try {
-            await updateSuggestionStatus(suggestion.id, nextStatus);
-            setSuggestions((current) => current.map((item) => item.id === suggestion.id ? { ...item, status: nextStatus } : item));
-            toast.success("Status atualizado.");
-          } catch (error) {
-            console.error("Erro ao atualizar status:", error);
-            toast.error("Não foi possível atualizar o status.");
-          }
-        }}>
-          <option value="new">Nova</option>
-          <option value="read">Lida</option>
-          <option value="resolved">Resolvida</option>
-        </select>
-      </div>
-      <p className="suggestion-admin-card__message">{suggestion.message}</p>
-      <div className="suggestion-admin-card__meta">
-        <span>Enviada em {new Date(suggestion.created_at).toLocaleString("pt-BR")}</span>
-        <span>Por {suggestion.user_name?.trim() || "usuário sem identificação"}</span>
-        {suggestion.user_contact && <span>Contato: {suggestion.user_contact}</span>}
-      </div>
-    </article>)}
-  </div>}
-</section></div></main>
+          <div className="section-heading"><div><div className="eyebrow">CONTEÚDOS PUBLICADOS</div><h2>Editar máquinas</h2></div></div>
+          <div className="published-machines-admin-grid">
+            {machines.length === 0 ? <div className="empty-state"><p>Nenhuma máquina publicada.</p></div> : machines.map((machine) => <article className="published-machine-admin-card" key={machine.id}>
+              <MachineVisual machine={machine} />
+              <div className="published-machine-admin-card__body"><span className="eyebrow">{machine.category}</span><h3>{machine.name}</h3><p>{machine.contentType === "text" ? "Material didático em texto" : "Vídeo em Libras"}</p><button className="small-outline" type="button" onClick={() => { setEditingMachine({ ...machine }); setEditingVideoFile(null); }}>Editar máquina</button></div>
+            </article>)}
+          </div>
+          {editingMachine && <div className="machine-edit-modal" role="dialog" aria-modal="true" aria-label={`Editar ${editingMachine.name}`}>
+            <div className="machine-edit-modal__backdrop" onClick={() => setEditingMachine(null)} />
+            <div className="machine-edit-modal__card">
+              <div className="machine-edit-modal__header"><div><div className="eyebrow">EDITAR CONTEÚDO</div><h2>{editingMachine.name}</h2></div><button className="modal-close" type="button" onClick={() => setEditingMachine(null)} aria-label="Fechar edição"><X size={20} /></button></div>
+              <div className="machine-edit-modal__preview"><MachineVisual machine={editingMachine} large /></div>
+              <form className="machine-edit-form" onSubmit={saveMachineEdition}>
+                <label>Nome da máquina<input value={editingMachine.name} onChange={(event) => setEditingMachine({ ...editingMachine, name: event.target.value })} required /></label>
+                <label>Descrição curta<input value={editingMachine.subtitle} onChange={(event) => setEditingMachine({ ...editingMachine, subtitle: event.target.value })} required /></label>
+                <label>Categoria<select value={editingMachine.category} onChange={(event) => setEditingMachine({ ...editingMachine, category: event.target.value })}><option>Produção</option><option>Corte</option><option>Automação</option><option>Utilidades</option><option>Manutenção</option></select></label>
+                <div className="edit-material-options"><strong>Material da máquina</strong><label><input type="radio" name="editContentType" checked={editingMachine.contentType === "video"} onChange={() => setEditingMachine({ ...editingMachine, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="editContentType" checked={editingMachine.contentType === "text"} onChange={() => setEditingMachine({ ...editingMachine, contentType: "text" })} /> Texto explicativo</label></div>
+                {editingMachine.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Trocar vídeo em Libras</strong><span>{editingVideoFile ? editingVideoFile.name : "Vídeo atual mantido se nenhum arquivo for escolhido"}</span></div><label className="small-outline upload-file-label">Selecionar vídeo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setEditingVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label>Material explicativo<textarea rows={9} value={editingMachine.textContent ?? ""} onChange={(event) => setEditingMachine({ ...editingMachine, textContent: event.target.value })} required /></label>}
+                <div className="machine-edit-modal__actions"><button className="small-outline" type="button" onClick={() => setEditingMachine(null)}>Cancelar</button><button className="button button--dark" type="submit" disabled={savingMachine}>{savingMachine ? "Salvando..." : "Salvar alterações"}</button></div>
+              </form>
+            </div>
+          </div>}
+        </section>
+          <section className="suggestions-admin-section">
+            <div className="section-heading">
+              <div>
+                <div className="eyebrow">FEEDBACK DOS USUÁRIOS</div>
+                <h2>Sugestões recebidas</h2>
+              </div>
+              <button className="outline-button" type="button" onClick={loadSuggestions} disabled={loadingSuggestions}>
+                {loadingSuggestions ? "Atualizando..." : "Atualizar"}
+              </button>
+            </div>
+            {loadingSuggestions ? <div className="empty-state"><p>Carregando sugestões...</p></div> : suggestions.length === 0 ? <div className="empty-state"><p>Ainda não há sugestões recebidas.</p></div> : <div className="suggestions-admin-list">
+              {suggestions.map((suggestion) => <article className="suggestion-admin-card" key={suggestion.id}>
+                <div className="suggestion-admin-card__header">
+                  <div><span className="eyebrow">SUGESTÃO RECEBIDA</span><h3>Feedback de usuário</h3></div>
+                  <select value={suggestion.status} onChange={async (event) => {
+                    const nextStatus = event.target.value as "new" | "read" | "resolved";
+                    try {
+                      await updateSuggestionStatus(suggestion.id, nextStatus);
+                      setSuggestions((current) => current.map((item) => item.id === suggestion.id ? { ...item, status: nextStatus } : item));
+                      toast.success("Status atualizado.");
+                    } catch (error) {
+                      console.error("Erro ao atualizar status:", error);
+                      toast.error("Não foi possível atualizar o status.");
+                    }
+                  }}>
+                    <option value="new">Nova</option>
+                    <option value="read">Lida</option>
+                    <option value="resolved">Resolvida</option>
+                  </select>
+                </div>
+                <p className="suggestion-admin-card__message">{suggestion.message}</p>
+                <div className="suggestion-admin-card__meta">
+                  <span>Enviada em {new Date(suggestion.created_at).toLocaleString("pt-BR")}</span>
+                  <span>Por {suggestion.user_name?.trim() || "usuário sem identificação"}</span>
+                  {suggestion.user_contact && <span>Contato: {suggestion.user_contact}</span>}
+                </div>
+              </article>)}
+            </div>}
+          </section></div></main>
       ) : (
         <main>
           {activeTab === "explore" && <section className="hero-section"><div className="container hero-grid"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> MECÂNICA QUE INCLUI</div><h1>Aprenda a operar.<br /><em>Do seu jeito.</em></h1><p>Tutoriais em Libras para entender máquinas, trabalhar com segurança e revisar cada etapa quando precisar.</p><div className="hero-actions"><button className="button button--dark" onClick={() => openMachine(machines[0], true)}><QrCode size={17} /> Simular leitura do QR</button><button className="text-link text-link--hero" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>Como funciona <ArrowUpRight size={16} /></button></div><div className="hero-trust"><div className="avatar-stack"><span>AC</span><span>ML</span><span>+</span></div><span>Feito para aprender no ritmo da operação</span></div></div><QrScannerPanel onScan={() => openMachine(machines[0], true)} /></div></section>}
