@@ -697,7 +697,7 @@ export default function Home() {
             aria-label="Ir para início"
           >
             <img
-              src="/meclibras/logo.png"
+              src="/meclibras/logo2.png"
               alt="MecLibras"
               className="brand-logo"
             />
