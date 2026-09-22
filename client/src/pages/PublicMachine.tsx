@@ -56,7 +56,7 @@ export default function PublicMachine() {
         <div className="eyebrow">PÁGINA PÚBLICA DA MÁQUINA</div>
         <h1>{machine.name}</h1>
         <p>{machine.description}</p>
-        {machine.content_type === "text" ? <section className="text-material-public"><div className="eyebrow">MATERIAL DIDÁTICO</div><h2>Orientações e procedimento</h2><div className="text-material-public__body">{machine.text_content || "Nenhum texto explicativo foi cadastrado."}</div></section> : machine.video_url ? <video className="machine-video-real public-video" controls playsInline preload="metadata" poster={`${import.meta.env.BASE_URL}video-thumb.png`} src={machine.video_url}>Seu navegador não suporta vídeos.</video> : <div className="video-placeholder">Vídeo em Libras ainda não cadastrado.</div>}
+        {machine.content_type === "text" ? <section className="text-material-public"><div className="eyebrow">MATERIAL DIDÁTICO</div><h2>Orientações e procedimento</h2><div className="text-material-public__body">{machine.text_content || "Nenhum texto explicativo foi cadastrado."}</div></section> : machine.video_url ? <video className="machine-video-real public-video" controls playsInline preload="metadata" poster="/meclibras/video-thumb.png" src={machine.video_url}>Seu navegador não suporta vídeos.</video> : <div className="video-placeholder">Vídeo em Libras ainda não cadastrado.</div>}
         {machine.subtitle_url && <p><a href={machine.subtitle_url} target="_blank" rel="noreferrer">Abrir legenda</a></p>}
         {steps.length > 0 && <section className="public-instructions"><h2>Orientações</h2><ol>{steps.map((step) => <li key={step}>{step}</li>)}</ol></section>}
         <section className="suggestion-section">
