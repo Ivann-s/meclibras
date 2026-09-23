@@ -201,7 +201,6 @@ function MachineVisual({ machine, large = false }: { machine: Machine; large?: b
       <div className="visual-noise" />
       <div className="visual-topline">
         <span>{machine.category.toUpperCase()}</span>
-        <span className="visual-status"><span /> AO VIVO</span>
       </div>
       <div className={`machine-shape machine-shape--${machine.visual}`}>
         <div className="machine-shape__screen"><span>READY</span></div>
