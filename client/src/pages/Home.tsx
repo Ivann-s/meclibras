@@ -12,6 +12,7 @@ import {
 
 import {
   Accessibility,
+  ChevronLeft,
   ArrowLeft,
   ArrowUpRight,
   BadgeCheck,
@@ -259,7 +260,11 @@ function MachineCard({ machine, onOpen }: { machine: Machine; onOpen: (machine: 
       <div className="machine-card__body">
         <div className="machine-card__meta"><span>{machine.category}</span><span>•</span><span>{machine.duration}</span></div>
         <h3>{machine.name}</h3>
-        <p>{machine.subtitle}</p>
+        <p className="machine-card__material-type">
+          {machine.contentType === "text"
+            ? "Texto explicativo"
+            : "Vídeo em Libras"}
+        </p>
         <div className="machine-card__bottom">
           <span className="view-count"><Eye size={14} /> {machine.views} visualizações</span>
           <button className="icon-link" onClick={() => onOpen(machine)} aria-label={`Ver ${machine.name}`}><ArrowUpRight size={18} /></button>
@@ -483,6 +488,18 @@ export default function Home() {
     });
   }, [machines, query, category]);
 
+  const scrollCatalog = (direction: "left" | "right") => {
+    const catalog = document.getElementById("machine-catalog-track");
+
+    if (!catalog) return;
+
+    const amount = catalog.clientWidth;
+
+    catalog.scrollBy({
+      left: direction === "right" ? amount : -amount,
+      behavior: "smooth",
+    });
+  };
   const historyMachines = history.map((id) => machines.find((machine) => machine.id === id)).filter(Boolean) as Machine[];
 
   const openMachine = (machine: Machine, announce = false) => {
@@ -844,14 +861,42 @@ export default function Home() {
                 </div>
 
                 {filteredMachines.length > 0 ? (
-                  <div className="machine-grid">
-                    {filteredMachines.map((machine) => (
-                      <MachineCard
-                        key={machine.id}
-                        machine={machine}
-                        onOpen={openMachine}
-                      />
-                    ))}
+                  <div className="machine-carousel">
+                    {filteredMachines.length > 4 && (
+                      <button
+                        className="machine-carousel__button machine-carousel__button--left"
+                        type="button"
+                        onClick={() => scrollCatalog("left")}
+                        aria-label="Ver máquinas anteriores"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                    )}
+
+                    <div
+                      className="machine-carousel__track"
+                      id="machine-catalog-track"
+                    >
+                      {filteredMachines.map((machine) => (
+                        <div className="machine-carousel__item" key={machine.id}>
+                          <MachineCard
+                            machine={machine}
+                            onOpen={openMachine}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {filteredMachines.length > 4 && (
+                      <button
+                        className="machine-carousel__button machine-carousel__button--right"
+                        type="button"
+                        onClick={() => scrollCatalog("right")}
+                        aria-label="Ver próximas máquinas"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="empty-state">
