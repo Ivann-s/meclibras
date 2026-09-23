@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import {
+  createMachineProfile,
   createSuggestion,
+  getMachineProfiles,
   getPublishedMachines,
   getSuggestions,
   updateMachine,
@@ -61,6 +63,15 @@ type Machine = {
   videoUrl?: string;
   contentType?: "video" | "text";
   textContent?: string;
+  machineProfileId?: string | null;
+};
+type MachineProfile = {
+  id: string;
+  name: string;
+  slug: string;
+  category?: string | null;
+  description?: string | null;
+  status: string;
 };
 
 type Suggestion = {
@@ -396,6 +407,138 @@ function VideoPlayer({ machine }: { machine: Machine }) {
   );
 }
 
+function MachineProfilePage({
+  profile,
+  machines,
+  onBack,
+  onOpenMachine,
+}: {
+  profile: MachineProfile;
+  machines: Machine[];
+  onBack: () => void;
+  onOpenMachine: (machine: Machine) => void;
+}) {
+  const profileMachines = machines.filter(
+    (machine) => machine.machineProfileId === profile.id,
+  );
+
+  return (
+    <main className="machine-profile-page">
+      <div className="container">
+        <button
+          className="back-link"
+          type="button"
+          onClick={onBack}
+        >
+          <ArrowLeft size={16} />
+          Voltar para máquinas
+        </button>
+
+        <header className="machine-profile-page__header">
+          <div className="eyebrow">
+            <span className="eyebrow-dot" />
+            MÁQUINA PRINCIPAL
+          </div>
+
+          <h1>{profile.name}</h1>
+
+          <p>
+            {profile.description ||
+              "Consulte os conteúdos e informações desta máquina."}
+          </p>
+        </header>
+
+        <div className="machine-profile-page__divider" />
+
+        <section className="machine-profile-page__contents">
+          <div className="machine-profile-page__section-heading">
+            <div>
+              <div className="eyebrow">CONTEÚDOS DA MÁQUINA</div>
+              <h2>Aprenda cada parte.</h2>
+            </div>
+
+            <span>
+              {profileMachines.length}{" "}
+              {profileMachines.length === 1 ? "conteúdo" : "conteúdos"}
+            </span>
+          </div>
+
+          {profileMachines.length > 0 ? (
+            <div className="machine-profile-content-list">
+              {profileMachines.map((machine, index) => (
+                <article
+                  className="machine-profile-content-card"
+                  key={machine.id}
+                >
+                  <div className="machine-profile-content-card__number">
+                    {String(index + 1).padStart(2, "0")}
+                  </div>
+
+                  <div className="machine-profile-content-card__video">
+                    {machine.contentType === "text" ? (
+                      <div className="machine-profile-text-content">
+                        <div className="eyebrow">
+                          MATERIAL DIDÁTICO
+                        </div>
+
+                        <h3>{machine.name}</h3>
+
+                        <div>
+                          {machine.textContent ||
+                            machine.description ||
+                            machine.subtitle}
+                        </div>
+                      </div>
+                    ) : (
+                      <VideoPlayer machine={machine} />
+                    )}
+                  </div>
+
+                  <div className="machine-profile-content-card__body">
+                    <div className="machine-profile-content-card__meta">
+                      <span>{machine.category}</span>
+                      <span>•</span>
+                      <span>
+                        {machine.contentType === "text"
+                          ? "Texto explicativo"
+                          : "Vídeo em Libras"}
+                      </span>
+                    </div>
+
+                    <h3>{machine.name}</h3>
+
+                    <p>
+                      {machine.subtitle ||
+                        machine.description ||
+                        "Conteúdo em Libras para esta parte da máquina."}
+                    </p>
+
+                    <button
+                      className="text-link"
+                      type="button"
+                      onClick={() => onOpenMachine(machine)}
+                    >
+                      Abrir conteúdo completo
+                      <ArrowUpRight size={16} />
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="machine-profile-empty">
+              <Settings2 size={24} />
+              <h3>Nenhum conteúdo cadastrado ainda.</h3>
+              <p>
+                Os conteúdos associados a esta máquina aparecerão aqui.
+              </p>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
+  );
+}
 function SuggestionForm({ machineId }: { machineId: string }) {
   const [message, setMessage] = useState("");
   const [userName, setUserName] = useState("");
@@ -481,6 +624,15 @@ export default function Home() {
   const [loadingMachines, setLoadingMachines] = useState(true);
   const [activeTab, setActiveTab] = useState<"explore" | "history" | "admin">("explore");
   const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
+  const [selectedProfileName, setSelectedProfileName] = useState("");
+  const [selectedProfile, setSelectedProfile] =
+    useState<MachineProfile | null>(null);
+  const [machineProfiles, setMachineProfiles] = useState<MachineProfile[]>([]);
+  const [profileForm, setProfileForm] = useState({
+    name: "",
+    description: "",
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
   const [history, setHistory] = useState<string[]>(["press-001", "laser-014"]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
@@ -488,7 +640,15 @@ export default function Home() {
   const [adminAuthed, setAdminAuthed] = useState(false);
   const [userAuthed, setUserAuthed] = useState(false);
   const [createdSlug, setCreatedSlug] = useState("");
-  const [form, setForm] = useState({ name: "", category: "Produção", subtitle: "", duration: "", contentType: "video" as "video" | "text", textContent: "" });
+  const [form, setForm] = useState({
+    name: "",
+    category: "Produção",
+    subtitle: "",
+    duration: "",
+    contentType: "video" as "video" | "text",
+    textContent: "",
+    machineProfileId: "",
+  });
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
@@ -505,9 +665,13 @@ export default function Home() {
     }
   }, []);
   useEffect(() => {
-    async function loadMachines() {
+    async function loadData() {
       try {
-        const data = await getPublishedMachines();
+        const [data, profiles] = await Promise.all([
+          getPublishedMachines(),
+          getMachineProfiles(),
+        ]);
+
         const convertedMachines: Machine[] = data.map((machine) => ({
           id: machine.id,
           name: machine.name,
@@ -530,22 +694,21 @@ export default function Home() {
           videoUrl: machine.video_url ?? "",
           contentType: machine.content_type ?? (machine.video_url ? "video" : "text"),
           textContent: machine.text_content ?? "",
+          machineProfileId: machine.machine_profile_id ?? null,
         }));
 
-
         setMachines(convertedMachines);
+        setMachineProfiles(profiles);
       } catch (error) {
-        console.error("Erro ao carregar máquinas do Supabase:", error);
-
-        // Mantém o protótipo funcionando caso o banco ainda esteja vazio
-        // ou a conexão ainda não esteja disponível.
+        console.error("Erro ao carregar dados do Supabase:", error);
         setMachines(seedMachines);
+        setMachineProfiles([]);
       } finally {
         setLoadingMachines(false);
       }
     }
 
-    loadMachines();
+    loadData();
   }, []);
   const categories = [
     "Todos",
@@ -567,9 +730,12 @@ export default function Home() {
       const matchesCategory =
         category === "Todos" || machine.category === category;
 
-      return matchesQuery && matchesCategory;
+      const matchesProfile =
+        !selectedProfile || machine.machineProfileId === selectedProfile.id;
+
+      return matchesQuery && matchesCategory && matchesProfile;
     });
-  }, [machines, query, category]);
+  }, [machines, query, category, selectedProfile]);
 
   const scrollCatalog = (direction: "left" | "right") => {
     const catalog = document.getElementById("machine-catalog-track");
@@ -584,8 +750,8 @@ export default function Home() {
     });
   };
   const historyMachines = history.map((id) => machines.find((machine) => machine.id === id)).filter(Boolean) as Machine[];
-
   const openMachine = (machine: Machine, announce = false) => {
+    setSelectedProfile(null);
     setSelectedMachine(machine);
     setHistory((current) => {
       const next = [machine.id, ...current.filter((id) => id !== machine.id)].slice(0, 6);
@@ -595,15 +761,27 @@ export default function Home() {
     if (announce) toast.success("QR reconhecido", { description: `${machine.name} está pronto para assistir em Libras.` });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  const openMachineProfile = (profile: MachineProfile) => {
+    setSelectedMachine(null);
+    setSelectedProfile(profile);
+    setSelectedProfileName(profile.name);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const submitMachine = async (event: FormEvent) => {
     event.preventDefault();
     if (!form.name || !form.subtitle) {
-      toast.error("Preencha o nome e a descrição da conteúdo.");
+      toast.error("Preencha o nome e a descrição do conteúdo.");
       return;
     }
+    if (!form.machineProfileId) {
+      toast.error("Selecione a máquina principal deste conteúdo.");
+      return;
+    }
+
     const generatedSlug = slugify(form.name);
     let uploadedVideoUrl = "";
+
     if (form.contentType === "text" && !form.textContent.trim()) {
       toast.error("Digite o material explicativo antes de cadastrar.");
       return;
@@ -619,16 +797,23 @@ export default function Home() {
         toast.error("Faça login como administrador antes de cadastrar.");
         return;
       }
-      const { data: savedMachine, error } = await supabase.from("machines").insert({
-        slug: generatedSlug,
-        name: form.name,
-        item_type: form.category,
-        description: form.subtitle,
-        content_type: form.contentType,
-        text_content: form.contentType === "text" ? form.textContent : null,
-        status: "published",
-        created_by: user.id,
-      }).select("id, slug").single();
+
+      const { data: savedMachine, error } = await supabase
+        .from("machines")
+        .insert({
+          slug: generatedSlug,
+          name: form.name,
+          item_type: form.category,
+          description: form.subtitle,
+          content_type: form.contentType,
+          text_content: form.contentType === "text" ? form.textContent : null,
+          machine_profile_id: form.machineProfileId || null,
+          status: "published",
+          created_by: user.id,
+        })
+        .select("id, slug")
+        .single();
+
       if (error || !savedMachine) {
         toast.error("Não foi possível salvar no Supabase", { description: error?.message ?? "Registro não criado." });
         return;
@@ -639,12 +824,13 @@ export default function Home() {
           const uploadedMachine = await uploadMachineVideo(generatedSlug, videoFile);
           uploadedVideoUrl = uploadedMachine.video_url ?? "";
         } catch (uploadError) {
-          toast.error("conteúdo criado, mas o vídeo não foi enviado", {
+          toast.error("Conteúdo criado, mas o vídeo não foi enviado", {
             description: uploadError instanceof Error ? uploadError.message : "Verifique o bucket videos-libras e suas políticas.",
           });
         }
       }
     }
+
     const newMachine: Machine = {
       id: generatedSlug,
       name: form.name,
@@ -655,17 +841,90 @@ export default function Home() {
       views: "0",
       accent: "lime",
       visual: "press",
-      description: `Vídeo introdutório em Libras sobre ${form.name}.`,
+      description: `Conteúdo em Libras sobre ${form.name}.`,
       steps: ["Apresente o conteúdo", "Explique os controles", "Mostre o procedimento seguro"],
       videoUrl: uploadedVideoUrl,
       contentType: form.contentType,
       textContent: form.textContent,
+      machineProfileId: form.machineProfileId,
     };
+
     setMachines((current) => [newMachine, ...current]);
     setCreatedSlug(generatedSlug);
-    setForm({ name: "", category: "Produção", subtitle: "", duration: "", contentType: "video", textContent: "" });
+    setForm({
+      name: "",
+      category: "Produção",
+      subtitle: "",
+      duration: "",
+      contentType: "video",
+      textContent: "",
+      machineProfileId: "",
+    });
     setVideoFile(null);
-    toast.success("Conteúdo cadastrado", { description: supabaseConfigured ? "Salva no Supabase e pronta para receber o vídeo." : "Salva no modo demo. Configure o Supabase para persistir online." });
+    toast.success("Conteúdo cadastrado", { description: supabaseConfigured ? "Salvo no Supabase." : "Salvo no modo demo." });
+  };
+
+  const submitMachineProfile = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!profileForm.name.trim()) {
+      toast.error("Digite o nome da máquina principal.");
+      return;
+    }
+
+    if (!profileForm.description.trim()) {
+      toast.error("Digite uma descrição breve da máquina.");
+      return;
+    }
+
+    setSavingProfile(true);
+
+    try {
+      const generatedSlug = slugify(profileForm.name);
+
+      const profile = await createMachineProfile({
+        name: profileForm.name.trim(),
+        slug: generatedSlug,
+        description: profileForm.description.trim(),
+      });
+
+      const convertedProfile: MachineProfile = {
+        id: profile.id,
+        name: profile.name,
+        slug: profile.slug,
+        category: profile.category ?? null,
+        description: profile.description ?? "",
+        status: profile.status,
+      };
+
+      setMachineProfiles((current) => [
+        ...current,
+        convertedProfile,
+      ]);
+
+      setForm((current) => ({
+        ...current,
+        machineProfileId: convertedProfile.id,
+      }));
+
+      setProfileForm({
+        name: "",
+        description: "",
+      });
+
+      toast.success("Máquina cadastrada.");
+    } catch (error) {
+      console.error("Erro ao cadastrar máquina:", error);
+
+      toast.error("Não foi possível cadastrar a máquina.", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Verifique as permissões do administrador.",
+      });
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   async function saveMachineEdition(event: FormEvent<HTMLFormElement>) {
@@ -680,6 +939,7 @@ export default function Home() {
         description: editingMachine.subtitle,
         content_type: editingMachine.contentType ?? "video",
         text_content: editingMachine.textContent,
+        machine_profile_id: editingMachine.machineProfileId ?? null,
       });
 
       let updatedVideoUrl = updated.video_url ?? editingMachine.videoUrl;
@@ -697,6 +957,7 @@ export default function Home() {
         contentType: updated.content_type ?? editingMachine.contentType,
         textContent: updated.text_content ?? "",
         videoUrl: updatedVideoUrl,
+        machineProfileId: updated.machine_profile_id ?? editingMachine.machineProfileId ?? null,
       };
 
       setMachines((current) => current.map((machine) => machine.id === converted.id ? converted : machine));
@@ -770,6 +1031,8 @@ export default function Home() {
 
   const navigateTo = (tab: "explore" | "history" | "admin") => {
     setSelectedMachine(null);
+    setSelectedProfile(null);
+    setSelectedProfileName("");
     setActiveTab(tab);
     setMobileMenu(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -817,32 +1080,122 @@ export default function Home() {
             <section className="related-section"><div className="section-heading"><div><div className="eyebrow">CONTINUE EXPLORANDO</div><h2>Outros Conteúdos</h2></div><button className="text-link" onClick={() => { setSelectedMachine(null); setActiveTab("explore"); }}>Ver todas <ArrowUpRight size={16} /></button></div><div className="machine-grid machine-grid--related">{machines.filter((machine) => machine.id !== selectedMachine.id).slice(0, 3).map((machine) => <MachineCard key={machine.id} machine={machine} onOpen={openMachine} />)}</div></section>
           </div>
         </main>
+      ) : selectedProfile ? (
+        <MachineProfilePage
+          profile={selectedProfile}
+          machines={machines}
+          onBack={() => {
+            setSelectedProfile(null);
+            setSelectedProfileName("");
+          }}
+          onOpenMachine={openMachine}
+        />
+
       ) : activeTab === "admin" && !adminAuthed ? (
         <AdminLogin onLogin={handleLogin} onBack={() => navigateTo("explore")} />
       ) : activeTab === "admin" ? (
-        <main className="admin-page"><div className="container"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> PAINEL PRIVADO · ADMIN</div><h1>Cadastre novo conteúdo</h1><p> Cadastre o conteúdo, associe o vídeo em Libras e gere um QR pronto para imprimir.</p></div><div className="intro-icon"><Settings2 size={25} /></div></div><div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>01</span><strong>Você cadastra</strong><small>máquina + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2>Informações do conteúdo</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome do Conteúdo<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
-          <option>Produção</option>
-          <option>Corte</option>
-          <option>Automação</option>
-          <option>Utilidades</option>
-          <option>Manutenção</option>
-          <option>Normas Técnicas</option>
-          <option>Segurança</option>
-          <option>Funcionamento</option>
-        </select></label>
-          <label className={form.contentType === "text" ? "field-disabled" : ""}>
-            Duração do vídeo
-            <input
-              disabled
-              readOnly
-              value={
-                form.contentType === "text"
-                  ? "Não se aplica a texto"
-                  : form.duration || "Será detectada automaticamente"
-              }
-            />
-          </label>
-        </div><div className="material-type-selector"><strong>Tipo de material didático</strong><div className="material-type-options"><label><input type="radio" name="contentType" value="video" checked={form.contentType === "video"} onChange={() => setForm({ ...form, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="contentType" value="text" checked={form.contentType === "text"} onChange={() => setForm({ ...form, contentType: "text" })} /> Texto explicativo</label></div></div>{form.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label className="text-material-field">Material explicativo<textarea value={form.textContent} onChange={(event) => setForm({ ...form, textContent: event.target.value })} placeholder="Digite aqui o conteúdo didático, as orientações e os procedimentos de segurança..." rows={10} /></label>}<button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code do conteúdo</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desse conteúdo.</span></div></div></div><section className="published-machines-admin-section">
+        <main className="admin-page"><div className="container"><div className="page-intro"><div><div className="eyebrow"><span className="eyebrow-dot" /> PAINEL PRIVADO · ADMIN</div><h1>Cadastre novo conteúdo</h1><p> Cadastre o conteúdo, associe o vídeo em Libras e gere um QR pronto para imprimir.</p></div><div className="intro-icon"><Settings2 size={25} /></div></div><section className="machine-profile-admin-section">
+          <div className="section-heading">
+            <div><div className="eyebrow">01 · MÁQUINAS PRINCIPAIS</div><p></p></div>
+          </div>
+          <form
+            className="admin-form machine-profile-admin-form"
+            onSubmit={submitMachineProfile}
+          >
+
+            <h2 className="principal">Cadastre uma Máquina</h2>
+
+            <label>
+              Nome da máquina principal
+              <input
+                value={profileForm.name}
+                onChange={(event) =>
+                  setProfileForm({
+                    ...profileForm,
+                    name: event.target.value,
+                  })
+                }
+                placeholder="Ex.: Torno Convencional"
+                required
+              />
+            </label>
+
+            <label>
+              Descrição breve
+              <textarea
+                value={profileForm.description}
+                onChange={(event) =>
+                  setProfileForm({
+                    ...profileForm,
+                    description: event.target.value,
+                  })
+                }
+                placeholder="Ex.: Máquina utilizada para operações de usinagem e torneamento."
+                rows={3}
+                required
+              />
+            </label>
+
+            <button
+              className="button button--dark"
+              type="submit"
+              disabled={savingProfile}
+            >
+              <Plus size={17} />
+              {savingProfile
+                ? "Cadastrando..."
+                : "Cadastrar máquina"}
+            </button>
+          </form>
+        </section>
+          <div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>02</span><strong>Você cadastra</strong><small>conteúdo + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2> Cadastrar conteúdo</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome do Conteúdo<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
+            <option>Produção</option>
+            <option>Corte</option>
+            <option>Automação</option>
+            <option>Utilidades</option>
+            <option>Manutenção</option>
+            <option>Normas Técnicas</option>
+            <option>Segurança</option>
+            <option>Funcionamento</option>
+          </select></label>
+            <label className={form.contentType === "text" ? "field-disabled" : ""}>
+              Duração do vídeo
+              <input
+                disabled
+                readOnly
+                value={
+                  form.contentType === "text"
+                    ? "Não se aplica a texto"
+                    : form.duration || "Será detectada automaticamente"
+                }
+              />
+            </label>
+          </div>
+            <label className="admin-parent-machine-field">
+              Máquina principal
+
+              <select
+                value={form.machineProfileId}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    machineProfileId: event.target.value,
+                  })
+                }
+                required
+              >
+                <option value="">
+                  Selecione a máquina principal
+                </option>
+
+                {machineProfiles.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="material-type-selector"><strong>Tipo de material didático</strong><div className="material-type-options"><label><input type="radio" name="contentType" value="video" checked={form.contentType === "video"} onChange={() => setForm({ ...form, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="contentType" value="text" checked={form.contentType === "text"} onChange={() => setForm({ ...form, contentType: "text" })} /> Texto explicativo</label></div></div>{form.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label className="text-material-field">Material explicativo<textarea value={form.textContent} onChange={(event) => setForm({ ...form, textContent: event.target.value })} placeholder="Digite aqui o conteúdo didático, as orientações e os procedimentos de segurança..." rows={10} /></label>}<button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code do conteúdo</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desse conteúdo.</span></div></div></div><section className="published-machines-admin-section">
             <div className="section-heading"><div><div className="eyebrow">CONTEÚDOS PUBLICADOS</div><h2>Editar Conteúdo Publicado</h2></div></div>
             <div className="published-machines-admin-grid">
               {machines.length === 0 ? <div className="empty-state"><p>Nenhum conteúdo publicado.</p></div> : machines.map((machine) => <article className="published-machine-admin-card" key={machine.id}>
@@ -880,6 +1233,10 @@ export default function Home() {
                     <option>Normas Técnicas</option>
                     <option>Segurança</option>
                     <option>Funcionamento</option></select></label>
+                  <label>Máquina<select value={editingMachine.machineProfileId ?? ""} onChange={(event) => setEditingMachine({ ...editingMachine, machineProfileId: event.target.value || null })}>
+                    <option value="">Sem máquina principal</option>
+                    {machineProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+                  </select></label>
                   <div className="edit-material-options"><strong>Material da conteúdo</strong><label><input type="radio" name="editContentType" checked={editingMachine.contentType === "video"} onChange={() => setEditingMachine({ ...editingMachine, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="editContentType" checked={editingMachine.contentType === "text"} onChange={() => setEditingMachine({ ...editingMachine, contentType: "text" })} /> Texto explicativo</label></div>
                   {editingMachine.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Trocar vídeo em Libras</strong><span>{editingVideoFile ? editingVideoFile.name : "Vídeo atual mantido se nenhum arquivo for escolhido"}</span></div><label className="small-outline upload-file-label">Selecionar vídeo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setEditingVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label>Material explicativo<textarea rows={9} value={editingMachine.textContent ?? ""} onChange={(event) => setEditingMachine({ ...editingMachine, textContent: event.target.value })} required /></label>}
                   <div className="machine-edit-modal__actions"><button className="small-outline" type="button" onClick={() => setEditingMachine(null)}>Cancelar</button><button className="button button--dark" type="submit" disabled={savingMachine}>{savingMachine ? "Salvando..." : "Salvar alterações"}</button></div>
@@ -930,13 +1287,55 @@ export default function Home() {
         <main>
           {activeTab === "explore" && <section className="hero-section"><div className="container hero-grid"><div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> MECÂNICA QUE INCLUI</div><h1>Aprenda a operar<br /><em>Do seu jeito.</em></h1><p>Tutoriais em Libras para entender máquinas, trabalhar com segurança e revisar cada etapa quando precisar.</p><div className="hero-actions"><button className="button button--dark" onClick={() => openMachine(machines[0], true)}><QrCode size={17} /> Simular leitura do QR</button><button className="text-link text-link--hero" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>Como funciona <ArrowUpRight size={16} /></button></div><div className="hero-trust"><div className="avatar-stack"><span>AC</span><span>ML</span><span>+</span></div><span>Feito para aprender no ritmo da operação</span></div></div><QrScannerPanel onScan={() => openMachine(machines[0], true)} /></div></section>}
           {activeTab === "explore" && <section className="stats-strip"><div className="container stats-inner"><div><strong>01</strong><span>máquinas catalogadas</span></div><div><strong>100%</strong><span>conteúdo em Libras</span></div><div><strong>01</strong><span>QR para cada parte da máquina</span></div><div className="stats-quote"><Sparkles size={17} /><span>“Acessibilidade é quando o conteúdo chega junto.”</span></div></div></section>}
+          {activeTab === "explore" && machineProfiles.length > 0 && (
+            <section className="machine-profiles-section">
+              <div className="container">
+                <div className="section-heading">
+                  <div>
+                    <div className="eyebrow">MÁQUINAS PRINCIPAIS</div>
+                    <h2>Escolha uma máquina.</h2>
+                  </div>
+
+                  {selectedProfile && (
+                    <button
+                      className="text-link"
+                      onClick={() => setSelectedProfile(null)}
+                    >
+                      Ver todas <X size={16} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="machine-profile-list">
+                  {machineProfiles.map((profile) => (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      className="machine-profile-circle-card"
+                      onClick={() => openMachineProfile(profile)}
+                    >
+                      <span className="machine-profile-circle">
+                        <Settings2 size={25} />
+                      </span>
+
+                      <strong>{profile.name}</strong>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
           {activeTab === "explore" && (
             <section className="catalog-section">
               <div className="container">
                 <div className="section-heading section-heading--catalog">
                   <div>
                     <div className="eyebrow">CATÁLOGO DE CONTEÚDO</div>
-                    <h2>Escolha um conteúdo para começar.</h2>
+                    <h2>
+                      {selectedProfileName
+                        ? `Conteúdos de ${selectedProfileName}.`
+                        : "Escolha um conteúdo para começar."}
+                    </h2>
                   </div>
 
                   <div className="catalog-search">

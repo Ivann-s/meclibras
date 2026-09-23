@@ -8,16 +8,117 @@ export async function getPublishedMachines() {
   const { data, error } = await supabase
     .from("machines")
     .select(
-      "id, name, slug, item_type, description, instructions, content_type, text_content, video_url, subtitle_url, status"
+      `
+      id,
+      name,
+      slug,
+      item_type,
+      description,
+      instructions,
+      content_type,
+      text_content,
+      video_url,
+      subtitle_url,
+      status,
+      machine_profile_id
+      `
     )
     .eq("status", "published")
     .order("name");
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   return data ?? [];
+}
+
+export async function getMachineProfiles() {
+  if (!supabase) {
+    throw new Error("Supabase não está configurado.");
+  }
+
+  const { data, error } = await supabase
+    .from("machine_profiles")
+    .select(`
+      id,
+      name,
+      slug,
+      category,
+      description,
+      status,
+      created_at,
+      updated_at
+    `)
+    .eq("status", "published")
+    .order("name");
+
+  if (error) throw error;
+
+  return data ?? [];
+}
+
+export async function createMachineProfile(input: {
+  name: string;
+  slug: string;
+  category?: string;
+  description?: string;
+}) {
+  if (!supabase) {
+    throw new Error("Supabase não está configurado.");
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Faça login como administrador.");
+  }
+
+  const { data, error } = await supabase
+    .from("machine_profiles")
+    .insert({
+      name: input.name.trim(),
+      slug: input.slug.trim(),
+      category: input.category?.trim() || null,
+      description: input.description?.trim() || null,
+      created_by: user.id,
+      status: "published",
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+export async function updateMachineProfile(
+  id: string,
+  input: {
+    name: string;
+    category?: string;
+    description?: string;
+  },
+) {
+  if (!supabase) {
+    throw new Error("Supabase não está configurado.");
+  }
+
+  const { data, error } = await supabase
+    .from("machine_profiles")
+    .update({
+      name: input.name.trim(),
+      category: input.category?.trim() || null,
+      description: input.description?.trim() || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
 }
 
 export async function uploadMachineVideo(slug: string, file: File) {
@@ -25,7 +126,9 @@ export async function uploadMachineVideo(slug: string, file: File) {
     throw new Error("Supabase não está configurado.");
   }
 
-  const extension = file.name.split(".").pop()?.toLowerCase() || "mp4";
+  const extension =
+    file.name.split(".").pop()?.toLowerCase() || "mp4";
+
   const path = `${slug}/${crypto.randomUUID()}.${extension}`;
 
   const { error: uploadError } = await supabase.storage
@@ -57,7 +160,6 @@ export async function uploadMachineVideo(slug: string, file: File) {
   return data;
 }
 
-
 export async function getMachineBySlug(slug: string) {
   if (!supabase) {
     throw new Error("Supabase não está configurado.");
@@ -66,15 +168,26 @@ export async function getMachineBySlug(slug: string) {
   const { data, error } = await supabase
     .from("machines")
     .select(
-      "id, name, slug, item_type, description, instructions, content_type, text_content, video_url, subtitle_url, status"
+      `
+      id,
+      name,
+      slug,
+      item_type,
+      description,
+      instructions,
+      content_type,
+      text_content,
+      video_url,
+      subtitle_url,
+      status,
+      machine_profile_id
+      `
     )
     .eq("slug", slug)
     .eq("status", "published")
     .single();
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   return data;
 }
@@ -85,6 +198,7 @@ export async function createMachine(input: {
   item_type: string;
   description?: string;
   instructions?: string;
+  machine_profile_id?: string | null;
 }) {
   if (!supabase) {
     throw new Error("Supabase não está configurado.");
@@ -101,16 +215,19 @@ export async function createMachine(input: {
   const { data, error } = await supabase
     .from("machines")
     .insert({
-      ...input,
+      name: input.name,
+      slug: input.slug,
+      item_type: input.item_type,
+      description: input.description || null,
+      instructions: input.instructions || null,
+      machine_profile_id: input.machine_profile_id || null,
       created_by: user.id,
       status: "draft",
     })
     .select()
     .single();
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   return data;
 }
@@ -123,6 +240,7 @@ export async function updateMachine(
     description: string;
     content_type: "video" | "text";
     text_content?: string | null;
+    machine_profile_id?: string | null;
   },
 ) {
   if (!supabase) {
@@ -136,14 +254,34 @@ export async function updateMachine(
       item_type: input.item_type,
       description: input.description.trim(),
       content_type: input.content_type,
-      text_content: input.content_type === "text" ? input.text_content?.trim() || null : null,
+      text_content:
+        input.content_type === "text"
+          ? input.text_content?.trim() || null
+          : null,
+      machine_profile_id: input.machine_profile_id || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .select("id, name, slug, item_type, description, instructions, content_type, text_content, video_url, subtitle_url, status")
+    .select(
+      `
+      id,
+      name,
+      slug,
+      item_type,
+      description,
+      instructions,
+      content_type,
+      text_content,
+      video_url,
+      subtitle_url,
+      status,
+      machine_profile_id
+      `
+    )
     .single();
 
   if (error) throw error;
+
   return data;
 }
 
@@ -169,6 +307,7 @@ export async function createSuggestion(input: {
     .single();
 
   if (error) throw error;
+
   return data;
 }
 
@@ -185,6 +324,7 @@ export async function getSuggestions() {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
+
   return data ?? [];
 }
 
