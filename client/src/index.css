@@ -953,12 +953,14 @@ select:focus-visible {
   font-size: 11px;
   line-height: 1.45;
 }
+
 .machine-card__material-type {
   margin: 6px 0 0;
   font-size: 12px;
   font-weight: 700;
   color: #6c7b73;
 }
+
 .machine-card__bottom {
   display: flex;
   align-items: center;
@@ -1530,13 +1532,15 @@ select:focus-visible {
 }
 
 .video-player {
-  min-height: 480px;
-  overflow: hidden;
   position: relative;
-  border-radius: 12px;
-  background: #193b34;
-  color: #f4f8eb;
-  box-shadow: 0 20px 40px rgba(27, 60, 49, .13);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+  border-radius: 0;
 }
 
 .video-player--coral {
@@ -3356,13 +3360,11 @@ body {
 .machine-video-real {
   display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
+  height: 100%;
+  min-width: 0;
   min-height: 0;
-  max-height: none;
-  border-radius: 18px;
-  background: #151515;
   object-fit: cover;
+  background: #000;
 }
 
 .public-video {
@@ -3987,6 +3989,7 @@ body {
     display: none;
   }
 }
+
 .machine-edit-modal__qr {
   margin: 18px 0;
   padding: 18px;
@@ -4006,9 +4009,11 @@ body {
   height: 100%;
   object-fit: contain;
 }
+
 .machine-edit-modal .qr-preview-id strong {
   color: #3f4a45 !important;
 }
+
 .machine-profile-admin-form textarea {
   width: 100%;
   box-sizing: border-box;
@@ -4035,12 +4040,13 @@ body {
 }
 
 .principal {
-margin: 0 0 3px;
-    color: #294038;
-    font-family: "DM Serif Display", Georgia, serif;
-    font-size: 22px;
-    font-weight: 400;
+  margin: 0 0 3px;
+  color: #294038;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
 }
+
 /* =========================================================
    MÁQUINAS PRINCIPAIS - CÍRCULOS
    ========================================================= */
@@ -4151,6 +4157,7 @@ margin: 0 0 3px;
     max-width: 115px;
   }
 }
+
 /* =========================================================
    PÁGINA DA MÁQUINA PRINCIPAL
    ========================================================= */
@@ -4210,7 +4217,7 @@ margin: 0 0 3px;
   font-weight: 400;
 }
 
-.machine-profile-page__section-heading > span {
+.machine-profile-page__section-heading>span {
   color: #89978f;
   font-size: 11px;
   font-weight: 700;
@@ -4317,7 +4324,7 @@ margin: 0 0 3px;
   font-weight: 400;
 }
 
-.machine-profile-text-content > div:last-child {
+.machine-profile-text-content>div:last-child {
   white-space: pre-wrap;
   max-width: 780px;
   font-size: 16px;
@@ -4388,4 +4395,459 @@ margin: 0 0 3px;
     min-height: 230px;
     padding: 28px 20px;
   }
+}
+
+.machine-card__thumb {
+  position: relative;
+  height: 157px;
+  overflow: hidden;
+}
+
+.machine-card__thumb-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.machine-card__thumb-title {
+  position: absolute;
+  left: 25px;
+  top: 99px;
+  z-index: 4;
+
+  max-width: 125px;
+  padding: 1px 4px 2px 0;
+
+  color: #263630;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 10%;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.machine-card__thumb-title {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.content-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #f7f8f3;
+}
+
+.content-thumb--large {
+  aspect-ratio: 16 / 9;
+}
+
+.content-thumb > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.content-thumb__title {
+  position: absolute;
+  left: 8.7%;
+  top: 62%;
+  z-index: 3;
+
+  width: 34%;
+  margin: 0;
+
+  color: #263630;
+  font-size: clamp(11px, 1.25vw, 17px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.content-thumb--large .content-thumb__title {
+  left: 8.7%;
+  top: 62%;
+  font-size: clamp(14px, 1.5vw, 20px);
+}
+
+
+.history-card__thumb {
+  width: 190px;
+  height: auto;
+  flex: 0 0 190px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #f7f8f3;
+}
+
+.history-card__thumb .content-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.history-card__thumb .content-thumb__title {
+  font-size: 11px;
+}
+.machine-profile-playlist-page {
+  min-height: calc(100vh - 80px);
+  padding: 42px 0 90px;
+  background: #f7f8f3;
+}
+
+.machine-profile-playlist-page .back-link {
+  margin-bottom: 22px;
+}
+
+.machine-profile-player {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #dfe6de;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(28, 55, 44, 0.07);
+}
+/* VÍDEO GRANDE */
+
+.machine-profile-player__main {
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  background: #000;
+}
+
+.machine-profile-player__main .video-player {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+}
+
+.machine-profile-player__main .machine-video-real {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  background: #000;
+}
+/* TEXTO */
+
+.machine-video-real-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.machine-video-real-wrapper .machine-video-real {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.machine-video-real-title {
+  position: absolute;
+  left: 8.7%;
+  top: 62%;
+  z-index: 2;
+  width: 34%;
+  margin: 0;
+  color: #263630;
+  font-size: clamp(16px, 1.6vw, 24px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
+  pointer-events: none;
+}
+
+.machine-profile-player__text {
+  width: 100%;
+  padding: 55px;
+  background: #f8faf6;
+}
+
+.machine-profile-player__text h2 {
+  margin: 12px 0 18px;
+  color: #263630;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 38px;
+  font-weight: 400;
+}
+
+.machine-profile-player__text p {
+  max-width: 750px;
+  margin: 0;
+  color: #65756d;
+  font-size: 16px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+/* SEM CONTEÚDO */
+
+.machine-profile-player__empty {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  color: #96a19a;
+  background: #101713;
+}
+
+.machine-profile-player__empty p {
+  margin: 0;
+}
+
+/* PLAYLIST */
+
+.machine-profile-playlist {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-left: 1px solid #e0e6df;
+}
+
+.machine-profile-playlist__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 22px 18px;
+  border-bottom: 1px solid #e2e8e1;
+}
+
+.machine-profile-playlist__header h2 {
+  margin: 7px 0 0;
+  color: #263630;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.machine-profile-playlist__header > span {
+  color: #89958e;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.machine-profile-playlist__list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+/* ITEM DA PLAYLIST */
+
+.machine-profile-playlist__item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 25px 108px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 0;
+  border-bottom: 1px solid #e4e9e2;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.machine-profile-playlist__item:hover {
+  background: #f4f7f1;
+}
+
+.machine-profile-playlist__item--active {
+  background: #e9eee7;
+}
+
+.machine-profile-playlist__number {
+  color: #8a968f;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.machine-profile-playlist__thumb {
+  position: relative;
+  width: 108px;
+  height: 61px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: #e8ece5;
+}
+
+.machine-profile-playlist__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.machine-profile-playlist__play {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 23px;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  color: #193b34;
+  background: #d9ef4d;
+  border-radius: 50%;
+}
+
+.machine-profile-playlist__info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.machine-profile-playlist__info strong {
+  overflow: hidden;
+  color: #263630;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+}
+
+.machine-profile-playlist__info small {
+  color: #87938c;
+  font-size: 10px;
+}
+
+.machine-profile-playlist__empty {
+  padding: 25px 20px;
+  color: #87938c;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* INFORMAÇÕES DA MÁQUINA */
+
+.machine-profile-main-info {
+  max-width: 900px;
+  padding: 55px 0 20px;
+}
+
+.machine-profile-main-info h1 {
+  margin: 10px 0 16px;
+  color: #20322b;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(42px, 6vw, 68px);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.machine-profile-main-info p {
+  max-width: 820px;
+  margin: 0;
+  color: #65756d;
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+/* TABLET */
+
+@media (max-width: 900px) {
+  .machine-profile-player {
+    grid-template-columns: 1fr;
+  }
+
+  .machine-profile-playlist {
+    border-left: 0;
+    border-top: 1px solid #e0e6df;
+  }
+
+  .machine-profile-playlist__list {
+    max-height: 360px;
+  }
+
+  .machine-profile-player__main .video-player,
+  .machine-profile-player__main .machine-video-real {
+    min-height: 420px;
+  }
+}
+
+/* CELULAR */
+
+@media (max-width: 600px) {
+  .machine-profile-playlist-page {
+    padding: 30px 0 60px;
+  }
+
+  .machine-profile-playlist__item {
+    grid-template-columns: 23px 92px minmax(0, 1fr);
+  }
+
+  .machine-profile-playlist__thumb {
+    width: 92px;
+    height: 52px;
+  }
+
+  .machine-profile-player__main .video-player,
+  .machine-profile-player__main .machine-video-real {
+    min-height: 250px;
+  }
+
+  .machine-profile-player__text {
+    padding: 30px 22px;
+  }
+
+  .machine-profile-player__text h2 {
+    font-size: 30px;
+  }
+
+  .machine-profile-main-info {
+    padding-top: 40px;
+  }
+}
+.machine-profile-content-info {
+  max-width: 900px;
+  padding: 34px 0 10px;
+}
+
+.machine-profile-content-info h1 {
+  margin: 9px 0 12px;
+  color: #20322b;
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(34px, 5vw, 54px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.machine-profile-content-info p {
+  max-width: 820px;
+  margin: 0;
+  color: #65756d;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.machine-profile-related {
+  margin-top: 55px;
+  padding-bottom: 80px;
 }

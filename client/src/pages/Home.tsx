@@ -334,33 +334,100 @@ function VideoDuration({ src }: { src?: string }) {
 
   return <span>{duration}</span>;
 }
-
-function MachineCard({ machine, onOpen }: { machine: Machine; onOpen: (machine: Machine) => void }) {
+function ContentThumb({
+  machine,
+  large = false,
+}: {
+  machine: Machine;
+  large?: boolean;
+}) {
   return (
-    <article className={`machine-card ${machine.featured ? "machine-card--featured" : ""}`}>
-      <button className="machine-card__visual-button" onClick={() => onOpen(machine)} aria-label={`Abrir vídeo de ${machine.name}`}>
-        <MachineVisual machine={machine} />
-        <span className="play-bubble"><Play size={16} fill="currentColor" /></span>
+    <div
+      className={`content-thumb ${large ? "content-thumb--large" : ""
+        }`}
+    >
+      <img
+        src="/meclibras/video-thumb.png"
+        alt={`Thumbnail do conteúdo ${machine.name}`}
+      />
+
+      <strong className="content-thumb__title">
+        {machine.name}
+      </strong>
+
+      <span className="play-bubble">
+        <Play size={16} fill="currentColor" />
+      </span>
+    </div>
+  );
+}
+
+
+
+function MachineCard({
+  machine,
+  onOpen,
+}: {
+  machine: Machine;
+  onOpen: (machine: Machine) => void;
+}) {
+  return (
+    <article
+      className={`machine-card ${machine.featured ? "machine-card--featured" : ""
+        }`}
+    >
+      <button
+        className="machine-card__visual-button"
+        onClick={() => onOpen(machine)}
+        aria-label={`Abrir conteúdo de ${machine.name}`}
+      >
+        <div className="machine-card__thumb">
+          <img
+            className="machine-card__thumb-image"
+            src="/meclibras/video-thumb.png"
+            alt={`Thumbnail do conteúdo ${machine.name}`}
+          />
+
+          <strong className="machine-card__thumb-title">
+            {machine.name}
+          </strong>
+
+          <span className="play-bubble">
+            <Play size={16} fill="currentColor" />
+          </span>
+        </div>
       </button>
+
       <div className="machine-card__body">
         <div className="machine-card__meta">
           <span>{machine.category}</span>
           <span>•</span>
+
           {machine.contentType === "video" && machine.videoUrl ? (
             <VideoDuration src={machine.videoUrl} />
           ) : (
             <span>Texto explicativo</span>
           )}
         </div>
-        <h3>{machine.name}</h3>
+
         <p className="machine-card__material-type">
           {machine.contentType === "text"
             ? "Texto explicativo"
             : "Vídeo em Libras"}
         </p>
+
         <div className="machine-card__bottom">
-          <span className="view-count"><Eye size={14} /> {machine.views} visualizações</span>
-          <button className="icon-link" onClick={() => onOpen(machine)} aria-label={`Ver ${machine.name}`}><ArrowUpRight size={18} /></button>
+          <span className="view-count">
+            <Eye size={14} /> {machine.views} visualizações
+          </span>
+
+          <button
+            className="icon-link"
+            onClick={() => onOpen(machine)}
+            aria-label={`Ver ${machine.name}`}
+          >
+            <ArrowUpRight size={18} />
+          </button>
         </div>
       </div>
     </article>
@@ -373,9 +440,22 @@ function VideoPlayer({ machine }: { machine: Machine }) {
   return (
     <div className={`video-player video-player--${machine.accent}`}>
       {machine.videoUrl ? (
-        <video className="machine-video-real" controls playsInline preload="metadata" poster="/meclibras/video-thumb.png" src={machine.videoUrl}>
-          Seu navegador não suporta a reprodução de vídeos.
-        </video>
+        <div className="machine-video-real-wrapper">
+          <video
+            className="machine-video-real"
+            controls
+            playsInline
+            preload="metadata"
+            poster="/meclibras/video-thumb.png"
+            src={machine.videoUrl}
+          >
+            Seu navegador não suporta a reprodução de vídeos.
+          </video>
+
+          <strong className="machine-video-real-title">
+            {machine.name}
+          </strong>
+        </div>
       ) : null}
       {!machine.videoUrl && <>
         <div className="video-player__ambient" />
@@ -489,7 +569,7 @@ function MachineProfilePage({
                         </div>
                       </div>
                     ) : (
-                      <VideoPlayer machine={machine} />
+                      <ContentThumb machine={machine} large />
                     )}
                   </div>
 
@@ -583,11 +663,35 @@ function SuggestionForm({ machineId }: { machineId: string }) {
   );
 }
 
-function HistoryCard({ machine, onOpen }: { machine: Machine; onOpen: (machine: Machine) => void }) {
+function HistoryCard({
+  machine,
+  onOpen,
+}: {
+  machine: Machine;
+  onOpen: (machine: Machine) => void;
+}) {
   return (
     <button className="history-card" onClick={() => onOpen(machine)}>
-      <div className="history-card__thumb"><MachineVisual machine={machine} /></div>
-      <div className="history-card__info"><span className="eyebrow">VISTO RECENTEMENTE</span><h3>{machine.name}</h3><p>{machine.subtitle}</p><div className="history-card__progress"><span style={{ width: "62%" }} /></div><span className="history-card__time">Você parou em 02:48 · continuar</span></div>
+      <div className="history-card__thumb">
+        <ContentThumb machine={machine} />
+      </div>
+
+      <div className="history-card__info">
+        <span className="eyebrow">VISTO RECENTEMENTE</span>
+
+        <h3>{machine.name}</h3>
+
+        <p>{machine.subtitle}</p>
+
+        <div className="history-card__progress">
+          <span style={{ width: "62%" }} />
+        </div>
+
+        <span className="history-card__time">
+          Você parou em 02:48 · continuar
+        </span>
+      </div>
+
       <ChevronRight size={19} />
     </button>
   );
@@ -617,6 +721,161 @@ function AdminLogin({ onLogin, onBack }: { onLogin: (mode: "admin" | "user", ema
   );
 }
 
+function MachineProfilePlaylist({
+  profile,
+  machines,
+  selectedMachine,
+  onSelectMachine,
+  onBack,
+}: {
+  profile: MachineProfile;
+  machines: Machine[];
+  selectedMachine: Machine | null;
+  onSelectMachine: (machine: Machine) => void;
+  onBack: () => void;
+}) {
+  const profileMachines = machines.filter(
+    (machine) => machine.machineProfileId === profile.id,
+  );
+
+  return (
+    <main className="machine-profile-playlist-page">
+      <div className="container">
+
+        <button
+          className="back-link"
+          type="button"
+          onClick={onBack}
+        >
+          <ArrowLeft size={16} />
+          Voltar para máquinas
+        </button>
+
+        <section className="machine-profile-player">
+
+          <div className="machine-profile-player__main">
+            {selectedMachine ? (
+              selectedMachine.contentType === "text" ? (
+                <div className="machine-profile-player__text">
+                  <div className="eyebrow">
+                    MATERIAL DIDÁTICO
+                  </div>
+
+                  <h2>{selectedMachine.name}</h2>
+
+                  <p>
+                    {selectedMachine.textContent ||
+                      selectedMachine.description ||
+                      selectedMachine.subtitle}
+                  </p>
+                </div>
+              ) : (
+                <VideoPlayer machine={selectedMachine} />
+              )
+            ) : (
+              <div className="machine-profile-player__empty">
+                <Play size={34} />
+                <p>Nenhum conteúdo disponível.</p>
+              </div>
+            )}
+          </div>
+
+          <aside className="machine-profile-playlist">
+
+            <div className="machine-profile-playlist__header">
+              <div>
+                <div className="eyebrow">
+                  PLAYLIST DA MÁQUINA
+                </div>
+
+                <h2>{profile.name}</h2>
+              </div>
+
+              <span>
+                {profileMachines.length}{" "}
+                {profileMachines.length === 1
+                  ? "conteúdo"
+                  : "conteúdos"}
+              </span>
+            </div>
+
+            <div className="machine-profile-playlist__list">
+              {profileMachines.length > 0 ? (
+                profileMachines.map((machine, index) => (
+                  <button
+                    key={machine.id}
+                    type="button"
+                    className={`machine-profile-playlist__item ${selectedMachine?.id === machine.id
+                      ? "machine-profile-playlist__item--active"
+                      : ""
+                      }`}
+                    onClick={() => onSelectMachine(machine)}
+                  >
+                    <span className="machine-profile-playlist__number">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+
+                    <div className="machine-profile-playlist__thumb">
+                      <img
+                        src="/meclibras/video-thumb.png"
+                        alt=""
+                      />
+
+                      <span className="machine-profile-playlist__play">
+                        <Play size={13} fill="currentColor" />
+                      </span>
+                    </div>
+
+                    <span className="machine-profile-playlist__info">
+                      <strong>{machine.name}</strong>
+
+                      <small>
+                        {machine.contentType === "text"
+                          ? "Material explicativo"
+                          : "Vídeo em Libras"}
+                      </small>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="machine-profile-playlist__empty">
+                  <p>
+                    Nenhum conteúdo foi associado a esta máquina.
+                  </p>
+                </div>
+              )}
+            </div>
+
+          </aside>
+
+        </section>
+
+        <section className="machine-profile-content-info">
+          <div className="eyebrow">
+            <span className="eyebrow-dot" />
+            CONTEÚDOS EM LIBRAS
+          </div>
+
+          <h1>
+            {selectedMachine?.name || "Conteúdo em Libras"}
+          </h1>
+
+          <p>
+            {selectedMachine?.description ||
+              selectedMachine?.subtitle ||
+              "Descrição deste conteúdo em Libras."}
+          </p>
+        </section>
+
+        {selectedMachine && (
+          <SuggestionForm machineId={selectedMachine.id} />
+        )}
+
+      </div>
+    </main>
+  );
+}
+
 export default function Home() {
 
   const [machines, setMachines] = useState<Machine[]>([]);
@@ -626,6 +885,7 @@ export default function Home() {
   const [selectedProfileName, setSelectedProfileName] = useState("");
   const [selectedProfile, setSelectedProfile] =
     useState<MachineProfile | null>(null);
+  const [selectedProfileMachine, setSelectedProfileMachine] = useState<Machine | null>(null);
   const [machineProfiles, setMachineProfiles] = useState<MachineProfile[]>([]);
   const [profileForm, setProfileForm] = useState({
     name: "",
@@ -736,6 +996,8 @@ export default function Home() {
     });
   }, [machines, query, category, selectedProfile]);
 
+
+
   const scrollCatalog = (direction: "left" | "right") => {
     const catalog = document.getElementById("machine-catalog-track");
 
@@ -748,9 +1010,14 @@ export default function Home() {
       behavior: "smooth",
     });
   };
-  const historyMachines = history.map((id) => machines.find((machine) => machine.id === id)).filter(Boolean) as Machine[];
+
+  const historyMachines = history
+    .map((id) => machines.find((machine) => machine.id === id))
+    .filter(Boolean) as Machine[];
+
   const openMachine = (machine: Machine, announce = false) => {
     setSelectedProfile(null);
+    setSelectedProfileMachine(null);
     setSelectedMachine(machine);
     setHistory((current) => {
       const next = [machine.id, ...current.filter((id) => id !== machine.id)].slice(0, 6);
@@ -761,12 +1028,16 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const openMachineProfile = (profile: MachineProfile) => {
+    const profileMachines = machines.filter(
+      (machine) => machine.machineProfileId === profile.id,
+    );
+
     setSelectedMachine(null);
     setSelectedProfile(profile);
-    setSelectedProfileName(profile.name);
+    setSelectedProfileMachine(profileMachines[0] ?? null);
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
   const submitMachine = async (event: FormEvent) => {
     event.preventDefault();
     if (!form.name || !form.subtitle) {
@@ -1031,7 +1302,7 @@ export default function Home() {
   const navigateTo = (tab: "explore" | "history" | "admin") => {
     setSelectedMachine(null);
     setSelectedProfile(null);
-    setSelectedProfileName("");
+    setSelectedProfileMachine(null);
     setActiveTab(tab);
     setMobileMenu(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1080,14 +1351,15 @@ export default function Home() {
           </div>
         </main>
       ) : selectedProfile ? (
-        <MachineProfilePage
+        <MachineProfilePlaylist
           profile={selectedProfile}
           machines={machines}
+          selectedMachine={selectedProfileMachine}
+          onSelectMachine={setSelectedProfileMachine}
           onBack={() => {
             setSelectedProfile(null);
-            setSelectedProfileName("");
+            setSelectedProfileMachine(null);
           }}
-          onOpenMachine={openMachine}
         />
 
       ) : activeTab === "admin" && !adminAuthed ? (
@@ -1198,7 +1470,7 @@ export default function Home() {
             <div className="section-heading"><div><div className="eyebrow">CONTEÚDOS PUBLICADOS</div><h2>Editar Conteúdo Publicado</h2></div></div>
             <div className="published-machines-admin-grid">
               {machines.length === 0 ? <div className="empty-state"><p>Nenhum conteúdo publicado.</p></div> : machines.map((machine) => <article className="published-machine-admin-card" key={machine.id}>
-                <MachineVisual machine={machine} />
+                <ContentThumb machine={machine} />
                 <div className="published-machine-admin-card__body"><span className="eyebrow">{machine.category}</span><h3>{machine.name}</h3><p>{machine.contentType === "text" ? "Material didático em texto" : "Vídeo em Libras"}</p><button className="small-outline" type="button" onClick={() => { setEditingMachine({ ...machine }); setEditingVideoFile(null); }}>Editar Conteúdo</button></div>
               </article>)}
             </div>
