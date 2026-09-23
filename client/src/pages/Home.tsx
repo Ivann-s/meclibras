@@ -250,6 +250,81 @@ function ScanIcon() {
   return <span className="scan-icon"><span /><span /><span /><span /></span>;
 }
 
+function formatVideoDuration(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return "—";
+  }
+
+  const totalSeconds = Math.round(seconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainingSeconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+  }
+
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
+function getVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    const objectUrl = URL.createObjectURL(file);
+
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl);
+      video.removeAttribute("src");
+      video.load();
+    };
+
+    video.preload = "metadata";
+
+    video.onloadedmetadata = () => {
+      const duration = video.duration;
+      cleanup();
+      resolve(duration);
+    };
+
+    video.onerror = () => {
+      cleanup();
+      reject(new Error("Não foi possível identificar a duração do vídeo."));
+    };
+
+    video.src = objectUrl;
+  });
+}
+
+function VideoDuration({ src }: { src?: string }) {
+  const [duration, setDuration] = useState("—");
+
+  useEffect(() => {
+    if (!src) {
+      setDuration("—");
+      return;
+    }
+
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.src = src;
+
+    const handleLoadedMetadata = () => {
+      setDuration(formatVideoDuration(video.duration));
+    };
+
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.load();
+
+    return () => {
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeAttribute("src");
+      video.load();
+    };
+  }, [src]);
+
+  return <span>{duration}</span>;
+}
+
 function MachineCard({ machine, onOpen }: { machine: Machine; onOpen: (machine: Machine) => void }) {
   return (
     <article className={`machine-card ${machine.featured ? "machine-card--featured" : ""}`}>
@@ -258,7 +333,15 @@ function MachineCard({ machine, onOpen }: { machine: Machine; onOpen: (machine: 
         <span className="play-bubble"><Play size={16} fill="currentColor" /></span>
       </button>
       <div className="machine-card__body">
-        <div className="machine-card__meta"><span>{machine.category}</span><span>•</span><span>{machine.duration}</span></div>
+        <div className="machine-card__meta">
+          <span>{machine.category}</span>
+          <span>•</span>
+          {machine.contentType === "video" && machine.videoUrl ? (
+            <VideoDuration src={machine.videoUrl} />
+          ) : (
+            <span>Texto explicativo</span>
+          )}
+        </div>
         <h3>{machine.name}</h3>
         <p className="machine-card__material-type">
           {machine.contentType === "text"
@@ -746,7 +829,20 @@ export default function Home() {
           <option>Normas Técnicas</option>
           <option>Segurança</option>
           <option>Funcionamento</option>
-        </select></label><label className={form.contentType === "text" ? "field-disabled" : ""}>Duração do vídeo<input disabled={form.contentType === "text"} value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} placeholder={form.contentType === "text" ? "Não se aplica a texto" : "04:30"} /></label></div><div className="material-type-selector"><strong>Tipo de material didático</strong><div className="material-type-options"><label><input type="radio" name="contentType" value="video" checked={form.contentType === "video"} onChange={() => setForm({ ...form, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="contentType" value="text" checked={form.contentType === "text"} onChange={() => setForm({ ...form, contentType: "text" })} /> Texto explicativo</label></div></div>{form.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label className="text-material-field">Material explicativo<textarea value={form.textContent} onChange={(event) => setForm({ ...form, textContent: event.target.value })} placeholder="Digite aqui o conteúdo didático, as orientações e os procedimentos de segurança..." rows={10} /></label>}<button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code do conteúdo</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desse conteúdo.</span></div></div></div><section className="published-machines-admin-section">
+        </select></label>
+          <label className={form.contentType === "text" ? "field-disabled" : ""}>
+            Duração do vídeo
+            <input
+              disabled
+              readOnly
+              value={
+                form.contentType === "text"
+                  ? "Não se aplica a texto"
+                  : form.duration || "Será detectada automaticamente"
+              }
+            />
+          </label>
+        </div><div className="material-type-selector"><strong>Tipo de material didático</strong><div className="material-type-options"><label><input type="radio" name="contentType" value="video" checked={form.contentType === "video"} onChange={() => setForm({ ...form, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="contentType" value="text" checked={form.contentType === "text"} onChange={() => setForm({ ...form, contentType: "text" })} /> Texto explicativo</label></div></div>{form.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label className="text-material-field">Material explicativo<textarea value={form.textContent} onChange={(event) => setForm({ ...form, textContent: event.target.value })} placeholder="Digite aqui o conteúdo didático, as orientações e os procedimentos de segurança..." rows={10} /></label>}<button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code do conteúdo</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desse conteúdo.</span></div></div></div><section className="published-machines-admin-section">
             <div className="section-heading"><div><div className="eyebrow">CONTEÚDOS PUBLICADOS</div><h2>Editar Conteúdo Publicado</h2></div></div>
             <div className="published-machines-admin-grid">
               {machines.length === 0 ? <div className="empty-state"><p>Nenhum conteúdo publicado.</p></div> : machines.map((machine) => <article className="published-machine-admin-card" key={machine.id}>
@@ -759,6 +855,20 @@ export default function Home() {
               <div className="machine-edit-modal__card">
                 <div className="machine-edit-modal__header"><div><div className="eyebrow">EDITAR CONTEÚDO</div><h2>{editingMachine.name}</h2></div><button className="modal-close" type="button" onClick={() => setEditingMachine(null)} aria-label="Fechar edição"><X size={20} /></button></div>
                 <div className="machine-edit-modal__preview"><MachineVisual machine={editingMachine} large /></div>
+                <div className="machine-edit-modal__qr">
+                  <div className="form-section-title">
+                    <span>QR</span>
+                    <div>
+                      <h2>QR Code do conteúdo</h2>
+                      <p>Use este QR para abrir a página pública.</p>
+                    </div>
+                  </div>
+
+                  <RealQrPreview
+                    name={editingMachine.name}
+                    savedSlug={editingMachine.slug ?? editingMachine.id}
+                  />
+                </div>
                 <form className="machine-edit-form" onSubmit={saveMachineEdition}>
                   <label>Nome da conteúdo<input value={editingMachine.name} onChange={(event) => setEditingMachine({ ...editingMachine, name: event.target.value })} required /></label>
                   <label>Descrição<input value={editingMachine.subtitle} onChange={(event) => setEditingMachine({ ...editingMachine, subtitle: event.target.value })} required /></label>
