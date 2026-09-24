@@ -434,7 +434,15 @@ function MachineCard({
   );
 }
 
-function VideoPlayer({ machine }: { machine: Machine }) {
+function VideoPlayer({
+  machine,
+  onEnded,
+  autoPlay = false,
+}: {
+  machine: Machine;
+  onEnded?: () => void;
+  autoPlay?: boolean;
+}) {
   const [playing, setPlaying] = useState(false);
   const [captions, setCaptions] = useState(true);
   return (
@@ -448,13 +456,17 @@ function VideoPlayer({ machine }: { machine: Machine }) {
             preload="metadata"
             poster="/meclibras/video-thumb.png"
             src={machine.videoUrl}
+            onPlay={() => setPlaying(true)}
+            autoPlay={autoPlay}
+            onEnded={onEnded}
           >
             Seu navegador não suporta a reprodução de vídeos.
           </video>
-
-          <strong className="machine-video-real-title">
-            {machine.name}
-          </strong>
+          {!playing && (
+            <strong className="machine-video-real-title">
+              {machine.name}
+            </strong>
+          )}
         </div>
       ) : null}
       {!machine.videoUrl && <>
@@ -497,10 +509,10 @@ function MachineProfilePage({
   onBack: () => void;
   onOpenMachine: (machine: Machine) => void;
 }) {
+
   const profileMachines = machines.filter(
     (machine) => machine.machineProfileId === profile.id,
   );
-
   return (
     <main className="machine-profile-page">
       <div className="container">
@@ -720,24 +732,188 @@ function AdminLogin({ onLogin, onBack }: { onLogin: (mode: "admin" | "user", ema
     </main>
   );
 }
+function MachinePlaylistSelector({
+  profile,
+  machines,
+  onSelectCategory,
+  onBack,
+}: {
+  profile: MachineProfile;
+  machines: Machine[];
+  onSelectCategory: (
+    category:
+      | "Todos"
+      | "Funcionamento"
+      | "Partes da Máquina"
+      | "Segurança"
+  ) => void;
+  onBack: () => void;
+}) {
+  const profileMachines = machines.filter(
+    (machine) => machine.machineProfileId === profile.id,
+  );
+  const playlists: {
+    category:
+    | "Todos"
+    | "Funcionamento"
+    | "Partes da Máquina"
+    | "Segurança";
+    title: string;
+    description: string;
+  }[] = [
+      {
+        category: "Funcionamento",
+        title: `Funcionamento — ${profile.name}`,
+        description:
+          "Vídeos sobre o funcionamento e operação da máquina.",
+      },
+      {
+        category: "Partes da Máquina",
+        title: `Partes da Máquina — ${profile.name}`,
+        description:
+          "Vídeos que apresentam as partes e componentes da máquina.",
+      },
+      {
+        category: "Segurança",
+        title: `Segurança — ${profile.name}`,
+        description:
+          "Vídeos com orientações de segurança da máquina.",
+      },
+      {
+        category: "Todos",
+        title: `Playlist Completa — ${profile.name}`,
+        description:
+          "Todos os conteúdos disponíveis desta máquina.",
+      },
+    ];
 
+  return (
+    <main className="machine-playlist-selector-page">
+      <div className="container">
+        <button
+          className="back-link"
+          type="button"
+          onClick={onBack}
+        >
+          <ArrowLeft size={16} />
+          Voltar para máquinas
+        </button>
+
+        <header className="machine-playlist-selector-header">
+          <div className="eyebrow">
+            <span className="eyebrow-dot" />
+            PLAYLISTS DA MÁQUINA
+          </div>
+
+          <h1>{profile.name}</h1>
+
+          <p>
+            Escolha uma playlist para encontrar os conteúdos
+            que você procura.
+          </p>
+        </header>
+
+        <div className="machine-playlist-selector-divider" />
+
+        <section className="machine-playlist-selector-section">
+          <div className="machine-playlist-selector-carousel">
+            {playlists.map((playlist) => {
+              const amount =
+                playlist.category === "Todos"
+                  ? profileMachines.length
+                  : profileMachines.filter(
+                    (machine) =>
+                      machine.category === playlist.category,
+                  ).length;
+
+              return (
+                <button
+                  key={playlist.category}
+                  type="button"
+                  className="machine-playlist-selector-card"
+                  onClick={() =>
+                    onSelectCategory(playlist.category)
+                  }
+                >
+                  <div className="machine-playlist-selector-card__thumb">
+                    <img
+                      src="/meclibras/video-thumb.png"
+                      alt=""
+                    />
+
+                    <span className="machine-playlist-selector-card__play">
+                      <Play size={18} fill="currentColor" />
+                    </span>
+                  </div>
+
+                  <div className="machine-playlist-selector-card__body">
+                    <small>
+                      PLAYLIST · {amount}{" "}
+                      {amount === 1 ? "vídeo" : "vídeos"}
+                    </small>
+
+                    <h3>{playlist.title}</h3>
+
+                    <p>{playlist.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+}
 function MachineProfilePlaylist({
   profile,
   machines,
   selectedMachine,
   onSelectMachine,
+  playlistCategory,
   onBack,
 }: {
   profile: MachineProfile;
   machines: Machine[];
   selectedMachine: Machine | null;
   onSelectMachine: (machine: Machine) => void;
+  playlistCategory:
+  | "Todos"
+  | "Funcionamento"
+  | "Partes da Máquina"
+  | "Segurança";
   onBack: () => void;
 }) {
   const profileMachines = machines.filter(
     (machine) => machine.machineProfileId === profile.id,
   );
+  const filteredProfileMachines =
+    playlistCategory === "Todos"
+      ? profileMachines
+      : profileMachines.filter(
+        (machine) => machine.category === playlistCategory,
+      );
+  const [nextMachine, setNextMachine] = useState<Machine | null>(null);
+  const [countdown, setCountdown] = useState(5);
+  useEffect(() => {
+    if (!nextMachine) return;
 
+    setCountdown(5);
+
+    const interval = window.setInterval(() => {
+      setCountdown((current) => current - 1);
+    }, 1000);
+
+    const timeout = window.setTimeout(() => {
+      onSelectMachine(nextMachine);
+      setNextMachine(null);
+    }, 5000);
+
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [nextMachine, onSelectMachine]);
   return (
     <main className="machine-profile-playlist-page">
       <div className="container">
@@ -748,8 +924,7 @@ function MachineProfilePlaylist({
           onClick={onBack}
         >
           <ArrowLeft size={16} />
-          Voltar para máquinas
-        </button>
+          Voltar para Playlists        </button>
 
         <section className="machine-profile-player">
 
@@ -770,7 +945,25 @@ function MachineProfilePlaylist({
                   </p>
                 </div>
               ) : (
-                <VideoPlayer machine={selectedMachine} />
+                <VideoPlayer
+                  key={selectedMachine.id}
+                  machine={selectedMachine}
+                  autoPlay={Boolean(nextMachine)}
+                  onEnded={() => {
+                    const currentIndex = profileMachines.findIndex(
+                      (machine) => machine.id === selectedMachine.id,
+                    );
+
+                    const followingMachine =
+                      currentIndex >= 0
+                        ? profileMachines[currentIndex + 1]
+                        : undefined;
+
+                    if (!followingMachine) return;
+
+                    setNextMachine(followingMachine);
+                  }}
+                />
               )
             ) : (
               <div className="machine-profile-player__empty">
@@ -792,16 +985,16 @@ function MachineProfilePlaylist({
               </div>
 
               <span>
-                {profileMachines.length}{" "}
-                {profileMachines.length === 1
+                {filteredProfileMachines.length}{" "}
+                {filteredProfileMachines.length === 1
                   ? "conteúdo"
                   : "conteúdos"}
               </span>
             </div>
 
             <div className="machine-profile-playlist__list">
-              {profileMachines.length > 0 ? (
-                profileMachines.map((machine, index) => (
+              {filteredProfileMachines.length > 0 ? (
+                filteredProfileMachines.map((machine, index) => (
                   <button
                     key={machine.id}
                     type="button"
@@ -842,6 +1035,22 @@ function MachineProfilePlaylist({
                   <p>
                     Nenhum conteúdo foi associado a esta máquina.
                   </p>
+                </div>
+              )}
+              {nextMachine && (
+                <div className="machine-profile-next-notice">
+                  <div className="machine-profile-next-notice__content">
+                    <span>PRÓXIMO VÍDEO</span>
+                    <strong>{nextMachine.name}</strong>
+                    <small>Reproduzindo em {countdown}s</small>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setNextMachine(null)}
+                  >
+                    Cancelar
+                  </button>
                 </div>
               )}
             </div>
@@ -885,6 +1094,10 @@ export default function Home() {
   const [selectedProfileName, setSelectedProfileName] = useState("");
   const [selectedProfile, setSelectedProfile] =
     useState<MachineProfile | null>(null);
+  const [showPlaylistSelector, setShowPlaylistSelector] = useState(false);
+  const [playlistCategory, setPlaylistCategory] = useState<
+    "Todos" | "Funcionamento" | "Partes da Máquina" | "Segurança"
+  >("Todos");
   const [selectedProfileMachine, setSelectedProfileMachine] = useState<Machine | null>(null);
   const [machineProfiles, setMachineProfiles] = useState<MachineProfile[]>([]);
   const [profileForm, setProfileForm] = useState({
@@ -914,6 +1127,7 @@ export default function Home() {
   const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
   const [savingMachine, setSavingMachine] = useState(false);
   const [editingVideoFile, setEditingVideoFile] = useState<File | null>(null);
+  const [deletingMachine, setDeletingMachine] = useState<Machine | null>(null);
 
   useEffect(() => {
     try {
@@ -1027,6 +1241,7 @@ export default function Home() {
     if (announce) toast.success("QR reconhecido", { description: `${machine.name} está pronto para assistir em Libras.` });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   const openMachineProfile = (profile: MachineProfile) => {
     const profileMachines = machines.filter(
       (machine) => machine.machineProfileId === profile.id,
@@ -1035,6 +1250,15 @@ export default function Home() {
     setSelectedMachine(null);
     setSelectedProfile(profile);
     setSelectedProfileMachine(profileMachines[0] ?? null);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const openMachinePlaylistSelector = (profile: MachineProfile) => {
+    setSelectedMachine(null);
+    setSelectedProfile(profile);
+    setShowPlaylistSelector(true);
+    setPlaylistCategory("Todos");
+    setSelectedProfileMachine(null);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -1243,6 +1467,50 @@ export default function Home() {
       setSavingMachine(false);
     }
   }
+  async function deletePublishedMachine(machine: Machine) {
+    try {
+      if (supabaseConfigured && supabase) {
+        const { error } = await supabase
+          .from("machines")
+          .delete()
+          .eq("id", machine.id);
+
+        if (error) {
+          throw error;
+        }
+      }
+
+      setMachines((current) =>
+        current.filter((item) => item.id !== machine.id),
+      );
+
+      if (editingMachine?.id === machine.id) {
+        setEditingMachine(null);
+        setEditingVideoFile(null);
+      }
+
+      if (selectedMachine?.id === machine.id) {
+        setSelectedMachine(null);
+      }
+
+      if (selectedProfileMachine?.id === machine.id) {
+        setSelectedProfileMachine(null);
+      }
+      setDeletingMachine(null);
+      toast.success("Conteúdo excluído", {
+        description: "O conteúdo foi apagado permanentemente.",
+      });
+    } catch (error) {
+      console.error("Erro ao excluir conteúdo:", error);
+
+      toast.error("Não foi possível excluir o conteúdo.", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Verifique as permissões do administrador.",
+      });
+    }
+  }
 
   const handleLogin = async (mode: "admin" | "user", email: string, password: string) => {
     if (supabaseConfigured && supabase) {
@@ -1345,20 +1613,53 @@ export default function Home() {
               navigator.clipboard?.writeText(getPublicItemUrl(selectedMachine.slug ?? selectedMachine.id)
               ); toast.success("Link público copiado", { description: "Esse é o endereço que fica dentro do QR Code." });
             }}><Copy size={16} /> Copiar link do QR</button></div>
-            {selectedMachine.contentType === "text" ? <section className="text-material-public"><div className="eyebrow">MATERIAL DIDÁTICO</div><h2>Orientações e procedimento</h2><div className="text-material-public__body">{selectedMachine.textContent}</div></section> : <div className="detail-layout"><div><VideoPlayer machine={selectedMachine} /><div className="video-note"><BadgeCheck size={17} /><span>Vídeo revisado com consultoria em Libras</span><span className="note-separator">·</span><span>Legenda disponível</span></div></div><aside className="detail-aside"><div className="aside-label">SOBRE ESTE VÍDEO</div><h2>O essencial, sem complicar.</h2><p>{selectedMachine.subtitle}. O conteúdo foi pensado para consulta rápida no chão de fábrica.</p><div className="step-list">{selectedMachine.steps.map((step, index) => <div className="step-item" key={step}><span>{String(index + 1).padStart(2, "0")}</span><p>{step}</p><Check size={15} /></div>)}</div><button className="button button--dark button--wide" onClick={() => toast.success("Salvo no seu histórico", { description: "Você pode continuar de onde parou." })}><BookmarkIcon /> Salvar para rever depois</button></aside></div>}
+            {selectedMachine.contentType === "text" ? <section className="text-material-public"><div className="eyebrow">MATERIAL DIDÁTICO</div><h2>Orientações e procedimento</h2><div className="text-material-public__body">{selectedMachine.textContent}</div></section> : <div className="detail-layout"><div>
+              <VideoPlayer machine={selectedMachine} />
+              <div className="video-note"><BadgeCheck size={17} /><span>Vídeo revisado com consultoria em Libras</span><span className="note-separator">·</span><span>Legenda disponível</span></div></div><aside className="detail-aside"><div className="aside-label">SOBRE ESTE VÍDEO</div><h2>O essencial, sem complicar.</h2><p>{selectedMachine.subtitle}. O conteúdo foi pensado para consulta rápida no chão de fábrica.</p><div className="step-list">{selectedMachine.steps.map((step, index) => <div className="step-item" key={step}><span>{String(index + 1).padStart(2, "0")}</span><p>{step}</p><Check size={15} /></div>)}</div><button className="button button--dark button--wide" onClick={() => toast.success("Salvo no seu histórico", { description: "Você pode continuar de onde parou." })}><BookmarkIcon /> Salvar para rever depois</button></aside></div>}
             <SuggestionForm machineId={selectedMachine.id} />
             <section className="related-section"><div className="section-heading"><div><div className="eyebrow">CONTINUE EXPLORANDO</div><h2>Outros Conteúdos</h2></div><button className="text-link" onClick={() => { setSelectedMachine(null); setActiveTab("explore"); }}>Ver todas <ArrowUpRight size={16} /></button></div><div className="machine-grid machine-grid--related">{machines.filter((machine) => machine.id !== selectedMachine.id).slice(0, 3).map((machine) => <MachineCard key={machine.id} machine={machine} onOpen={openMachine} />)}</div></section>
           </div>
         </main>
+      ) : selectedProfile && showPlaylistSelector ? (
+        <MachinePlaylistSelector
+          profile={selectedProfile}
+          machines={machines}
+          onSelectCategory={(selectedCategory) => {
+            setPlaylistCategory(selectedCategory);
+            setShowPlaylistSelector(false);
+
+            const profileMachines = machines.filter(
+              (machine) => machine.machineProfileId === selectedProfile.id,
+            );
+
+            const filteredMachines =
+              selectedCategory === "Todos"
+                ? profileMachines
+                : profileMachines.filter(
+                  (machine) => machine.category === selectedCategory,
+                );
+
+            setSelectedProfileMachine(filteredMachines[0] ?? null);
+          }}
+          onBack={() => {
+            setSelectedProfile(null);
+            setSelectedProfileMachine(null);
+            setShowPlaylistSelector(false);
+            setPlaylistCategory("Todos");
+          }}
+        />
+
       ) : selectedProfile ? (
         <MachineProfilePlaylist
           profile={selectedProfile}
           machines={machines}
           selectedMachine={selectedProfileMachine}
           onSelectMachine={setSelectedProfileMachine}
+          playlistCategory={playlistCategory}
           onBack={() => {
-            setSelectedProfile(null);
+            setShowPlaylistSelector(true);
             setSelectedProfileMachine(null);
+            setPlaylistCategory("Todos");
           }}
         />
 
@@ -1419,29 +1720,47 @@ export default function Home() {
             </button>
           </form>
         </section>
-          <div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>02</span><strong>Você cadastra</strong><small>conteúdo + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2> Cadastrar conteúdo</h2><p>O que a pessoa verá ao escanear.</p></div></div><label>Nome do Conteúdo<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ex.: Torno CNC T-30" /></label><label>Descrição<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
-            <option>Produção</option>
-            <option>Corte</option>
-            <option>Automação</option>
-            <option>Utilidades</option>
-            <option>Manutenção</option>
-            <option>Normas Técnicas</option>
-            <option>Segurança</option>
-            <option>Funcionamento</option>
-          </select></label>
-            <label className={form.contentType === "text" ? "field-disabled" : ""}>
-              Duração do vídeo
+          <div className="admin-flow-note"><div className="admin-flow-note__step admin-flow-note__step--active"><span>02</span><strong>Você cadastra</strong><small>conteúdo + vídeo</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>02</span><strong>O sistema gera</strong><small>URL pública + QR</small></div><ChevronRight size={16} /><div className="admin-flow-note__step"><span>03</span><strong>O usuário lê</strong><small>e abre o vídeo</small></div></div><div className="admin-layout"><form className="admin-form" onSubmit={submitMachine}><div className="form-section-title"><span>01</span><div><h2> Cadastrar conteúdo</h2><p>O que a pessoa verá ao escanear.</p></div></div>
+            <label>
+              Nome do Conteúdo
               <input
-                disabled
-                readOnly
-                value={
-                  form.contentType === "text"
-                    ? "Não se aplica a texto"
-                    : form.duration || "Será detectada automaticamente"
-                }
+                value={form.name}
+                onChange={(event) => {
+                  const value = event.target.value;
+
+                  setForm({ ...form, name: value });
+
+                  if (createdSlug) {
+                    setCreatedSlug("");
+                  }
+                }}
+                placeholder="Ex.: Torno CNC T-30"
               />
             </label>
-          </div>
+
+            <label>Descrição<input value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} placeholder="Ex.: Primeiros passos e segurança" /></label><div className="form-row"><label>Categoria<select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
+              <option>Produção</option>
+              <option>Corte</option>
+              <option>Automação</option>
+              <option>Utilidades</option>
+              <option>Manutenção</option>
+              <option>Partes da Máquina</option>
+              <option>Segurança</option>
+              <option>Funcionamento</option>
+            </select></label>
+              <label className={form.contentType === "text" ? "field-disabled" : ""}>
+                Duração do vídeo
+                <input
+                  disabled
+                  readOnly
+                  value={
+                    form.contentType === "text"
+                      ? "Não se aplica a texto"
+                      : form.duration || "Será detectada automaticamente"
+                  }
+                />
+              </label>
+            </div>
             <label className="admin-parent-machine-field">
               Máquina principal
 
@@ -1467,11 +1786,30 @@ export default function Home() {
               </select>
             </label>
             <div className="material-type-selector"><strong>Tipo de material didático</strong><div className="material-type-options"><label><input type="radio" name="contentType" value="video" checked={form.contentType === "video"} onChange={() => setForm({ ...form, contentType: "video" })} /> Vídeo em Libras</label><label><input type="radio" name="contentType" value="text" checked={form.contentType === "text"} onChange={() => setForm({ ...form, contentType: "text" })} /> Texto explicativo</label></div></div>{form.contentType === "video" ? <div className="upload-box"><div className="upload-icon"><Play size={17} fill="currentColor" /></div><div><strong>Adicionar vídeo em Libras</strong><span>{videoFile ? videoFile.name : "MP4, até 500 MB"}</span></div><label className="small-outline upload-file-label">Selecionar arquivo<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)} /></label></div> : <label className="text-material-field">Material explicativo<textarea value={form.textContent} onChange={(event) => setForm({ ...form, textContent: event.target.value })} placeholder="Digite aqui o conteúdo didático, as orientações e os procedimentos de segurança..." rows={10} /></label>}<button className="button button--dark" type="submit"><Plus size={17} /> Cadastrar e gerar QR</button></form><div className="qr-preview-card"><div className="form-section-title"><span>02</span><div><h2>QR Code do conteúdo</h2><p>Baixe e imprima para colar na máquina.</p></div></div><RealQrPreview name={form.name} savedSlug={createdSlug} /><div className="qr-preview-note"><QrCode size={17} /><span>Este QR contém a URL pública desse conteúdo.</span></div></div></div><section className="published-machines-admin-section">
-            <div className="section-heading"><div><div className="eyebrow">CONTEÚDOS PUBLICADOS</div><h2>Editar Conteúdo Publicado</h2></div></div>
+            <div className="section-heading"><div><div className="eyebrow">CONTEÚDOS PUBLICADOS</div><h2>Gerenciar Conteúdos</h2></div></div>
             <div className="published-machines-admin-grid">
               {machines.length === 0 ? <div className="empty-state"><p>Nenhum conteúdo publicado.</p></div> : machines.map((machine) => <article className="published-machine-admin-card" key={machine.id}>
                 <ContentThumb machine={machine} />
-                <div className="published-machine-admin-card__body"><span className="eyebrow">{machine.category}</span><h3>{machine.name}</h3><p>{machine.contentType === "text" ? "Material didático em texto" : "Vídeo em Libras"}</p><button className="small-outline" type="button" onClick={() => { setEditingMachine({ ...machine }); setEditingVideoFile(null); }}>Editar Conteúdo</button></div>
+                <div className="published-machine-admin-card__actions">
+                  <button
+                    className="small-outline"
+                    type="button"
+                    onClick={() => {
+                      setEditingMachine({ ...machine });
+                      setEditingVideoFile(null);
+                    }}
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    className="published-machine-admin-card__delete"
+                    type="button"
+                    onClick={() => setDeletingMachine(machine)}                  >
+                    Excluir
+                  </button>
+                </div>
+
               </article>)}
             </div>
             {editingMachine && <div className="machine-edit-modal" role="dialog" aria-modal="true" aria-label={`Editar ${editingMachine.name}`}>
@@ -1501,7 +1839,7 @@ export default function Home() {
                     <option>Automação</option>
                     <option>Utilidades</option>
                     <option>Manutenção</option>
-                    <option>Normas Técnicas</option>
+                    <option>Partes da Máquina</option>
                     <option>Segurança</option>
                     <option>Funcionamento</option></select></label>
                   <label>Máquina<select value={editingMachine.machineProfileId ?? ""} onChange={(event) => setEditingMachine({ ...editingMachine, machineProfileId: event.target.value || null })}>
@@ -1514,6 +1852,57 @@ export default function Home() {
                 </form>
               </div>
             </div>}
+            {deletingMachine && (
+              <div
+                className="machine-delete-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label={`Confirmar exclusão de ${deletingMachine.name}`}
+              >
+                <div
+                  className="machine-delete-modal__backdrop"
+                  onClick={() => setDeletingMachine(null)}
+                />
+
+                <div className="machine-delete-modal__card">
+                  <div className="machine-delete-modal__icon">
+                    !
+                  </div>
+
+                  <div className="machine-delete-modal__content">
+                    <span className="eyebrow">EXCLUSÃO PERMANENTE</span>
+
+                    <h2> Tem certeza que quer excluir esse conteúdo?</h2>
+
+                    <p>
+                      Você está prestes a excluir <strong>{deletingMachine.name}</strong>.
+                    </p>
+
+                    <span className="machine-delete-modal__warning">
+                      Este conteúdo será apagado permanentemente e não poderá ser recuperado.
+                    </span>
+                  </div>
+
+                  <div className="machine-delete-modal__actions">
+                    <button
+                      className="small-outline"
+                      type="button"
+                      onClick={() => setDeletingMachine(null)}
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      className="machine-delete-modal__confirm"
+                      type="button"
+                      onClick={() => deletePublishedMachine(deletingMachine)}
+                    >
+                      Excluir permanentemente
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
           <section className="suggestions-admin-section">
             <div className="section-heading">
@@ -1576,14 +1965,13 @@ export default function Home() {
                     </button>
                   )}
                 </div>
-
                 <div className="machine-profile-list">
                   {machineProfiles.map((profile) => (
                     <button
                       key={profile.id}
                       type="button"
                       className="machine-profile-circle-card"
-                      onClick={() => openMachineProfile(profile)}
+                      onClick={() => openMachinePlaylistSelector(profile)}
                     >
                       <span className="machine-profile-circle">
                         <Settings2 size={25} />
@@ -1593,6 +1981,7 @@ export default function Home() {
                     </button>
                   ))}
                 </div>
+
               </div>
             </section>
           )}
