@@ -40,6 +40,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  EyeOff,
   Volume2,
   X,
   Zap,
@@ -709,22 +710,304 @@ function HistoryCard({
   );
 }
 
+function UserAuth({
+  onSuccess,
+  onBack,
+}: {
+  onSuccess: (email: string, name: string) => void;
+  onBack: () => void;
+}) {
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!supabaseConfigured || !supabase) {
+      toast.error("O Supabase não está configurado.");
+      return;
+    }
+
+    if (mode === "signup" && !name.trim()) {
+      toast.error("Digite seu nome.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: {
+              full_name: name.trim(),
+            },
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data.session) {
+          toast.success("Conta criada.", {
+            description:
+              "Verifique seu e-mail para confirmar a conta antes de entrar.",
+          });
+          setMode("login");
+          return;
+        }
+
+        onSuccess(
+          email.trim(),
+          name.trim(),
+        );
+
+        toast.success("Conta criada com sucesso.");
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        const accountName =
+          data.user.user_metadata?.full_name ||
+          data.user.email?.split("@")[0] ||
+          "";
+
+        onSuccess(
+          data.user.email ?? email.trim(),
+          accountName,
+        );
+
+        toast.success("Login realizado com sucesso.");
+      }
+    } catch (error) {
+      console.error("Erro na autenticação:", error);
+
+      toast.error(
+        mode === "signup"
+          ? "Não foi possível criar a conta."
+          : "Não foi possível entrar.",
+        {
+          description:
+            error instanceof Error
+              ? error.message
+              : "Verifique seus dados e tente novamente.",
+        },
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="admin-login-page">
+      <div className="admin-login-card">
+        <div className="admin-login-icon">
+          <UserRound size={24} />
+        </div>
+
+        <div className="eyebrow">
+          <span className="eyebrow-dot" />
+          CONTA DE APRENDIZADO
+        </div>
+
+        <div className="login-mode-switch">
+          <button
+            type="button"
+            className={
+              mode === "login"
+                ? "login-mode-switch__active"
+                : ""
+            }
+            onClick={() => setMode("login")}
+          >
+            Entrar
+          </button>
+
+          <button
+            type="button"
+            className={
+              mode === "signup"
+                ? "login-mode-switch__active"
+                : ""
+            }
+            onClick={() => setMode("signup")}
+          >
+            Criar conta
+          </button>
+        </div>
+
+        <h1>
+          {mode === "login" ? (
+            <>
+              Continue seu
+              <br />
+              <em>aprendizado.</em>
+            </>
+          ) : (
+            <>
+              Crie sua
+              <br />
+              <em>conta.</em>
+            </>
+          )}
+        </h1>
+
+        <p>
+          {mode === "login"
+            ? "Entre para acessar seu histórico e continuar de onde parou."
+            : "Crie uma conta para salvar seu histórico de vídeos e acompanhar seu aprendizado."}
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          {mode === "signup" && (
+            <label>
+              Nome
+              <input
+                type="text"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Seu nome"
+                required
+              />
+            </label>
+          )}
+
+          <label>
+            E-mail
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="seuemail@email.com"
+              required
+            />
+          </label>
+
+          <label className="password-field">
+            Senha
+
+            <div className="password-field__wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) =>
+                  setPassword(event.target.value)
+                }
+                placeholder="••••••••"
+                minLength={6}
+                required
+              />
+
+              <button
+                type="button"
+                className="password-field__toggle"
+                onClick={() =>
+                  setShowPassword((value) => !value)
+                }
+                aria-label={
+                  showPassword
+                    ? "Ocultar senha"
+                    : "Mostrar senha"
+                }
+              >
+                {showPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
+              </button>
+            </div>
+          </label>
+
+          <button
+            className="button button--dark button--wide"
+            type="submit"
+            disabled={loading}
+          >
+            <UserRound size={16} />
+            {loading
+              ? "Aguarde..."
+              : mode === "login"
+                ? "Entrar"
+                : "Criar minha conta"}
+          </button>
+        </form>
+
+        <button
+          className="back-link back-link--center"
+          type="button"
+          onClick={onBack}
+        >
+          <ArrowLeft size={15} />
+          Voltar para a área pública
+        </button>
+      </div>
+    </main>
+  );
+}
+
 function AdminLogin({ onLogin, onBack }: { onLogin: (mode: "admin" | "user", email: string, password: string) => void; onBack: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<"admin" | "user">("admin");
   return (
     <main className="admin-login-page">
       <div className="admin-login-card">
         <div className="admin-login-icon"><ShieldCheck size={24} /></div>
         <div className="eyebrow"><span className="eyebrow-dot" /> {mode === "admin" ? "ÁREA RESTRITA" : "CONTA DE APRENDIZADO"}</div>
-        <div className="login-mode-switch"><button type="button" className={mode === "admin" ? "login-mode-switch__active" : ""} onClick={() => setMode("admin")}>Administrador</button><button type="button" className={mode === "user" ? "login-mode-switch__active" : ""} onClick={() => setMode("user")}>Usuário</button></div>
+        <div className="login-mode-switch"><button type="button" className={mode === "admin" ? "login-mode-switch__active" : ""} onClick={() => setMode("admin")}>Administrador</button></div>
         <h1>{mode === "admin" ? <>Entre para gerenciar<br /><em>seus QRs.</em></> : <>Continue seu<br /><em>aprendizado.</em></>}</h1>
         <p>{mode === "admin" ? "Somente administradores cadastram conteúdos, associam vídeos e geram novas etiquetas." : "Crie uma conta para rever vídeos, salvar conteúdos e acompanhar seu histórico."}</p>
         <form onSubmit={(event) => { event.preventDefault(); onLogin(mode, email, password); }}>
           <label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@empresa.com" required /></label>
-          <label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" required /></label>
-          <button className="button button--dark button--wide" type="submit"><ShieldCheck size={16} /> Entrar no painel</button>
+          <label className="password-field">
+            Senha
+
+            <div className="password-field__wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) =>
+                  setPassword(event.target.value)
+                }
+                placeholder="••••••••"
+                required
+              />
+
+              <button
+                type="button"
+                className="password-field__toggle"
+                onClick={() =>
+                  setShowPassword((value) => !value)
+                }
+                aria-label={
+                  showPassword
+                    ? "Ocultar senha"
+                    : "Mostrar senha"
+                }
+              >
+                {showPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
+              </button>
+            </div>
+          </label>          <button className="button button--dark button--wide" type="submit"><ShieldCheck size={16} /> Entrar no painel</button>
         </form>
         <div className="login-demo-note"><Zap size={16} /><span>{supabaseConfigured ? "Login conectado ao Supabase." : "Modo demo: configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para ativar o login online."}</span></div>
         <button className="back-link back-link--center" onClick={onBack}><ArrowLeft size={15} /> Voltar para a área pública</button>
@@ -1089,8 +1372,9 @@ export default function Home() {
 
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loadingMachines, setLoadingMachines] = useState(true);
-  const [activeTab, setActiveTab] = useState<"explore" | "history" | "admin">("explore");
-  const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "explore" | "history" | "admin" | "user-login"
+  >("explore"); const [selectedMachine, setSelectedMachine] = useState<Machine | null>(null);
   const [selectedProfileName, setSelectedProfileName] = useState("");
   const [selectedProfile, setSelectedProfile] =
     useState<MachineProfile | null>(null);
@@ -1111,6 +1395,8 @@ export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [adminAuthed, setAdminAuthed] = useState(false);
   const [userAuthed, setUserAuthed] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const [createdSlug, setCreatedSlug] = useState("");
   const [form, setForm] = useState({
     name: "",
@@ -1567,7 +1853,9 @@ export default function Home() {
     }
   }, [activeTab, adminAuthed]);
 
-  const navigateTo = (tab: "explore" | "history" | "admin") => {
+  const navigateTo = (
+    tab: "explore" | "history" | "admin" | "user-login"
+  ) => {
     setSelectedMachine(null);
     setSelectedProfile(null);
     setSelectedProfileMachine(null);
@@ -1599,7 +1887,38 @@ export default function Home() {
             <button className={activeTab === "history" && !selectedMachine ? "nav-link nav-link--active" : "nav-link"} onClick={() => navigateTo("history")}><History size={16} /> Meu histórico <span className="nav-count">{history.length}</span></button>
             <button className={activeTab === "admin" && !selectedMachine ? "nav-link nav-link--active" : "nav-link"} onClick={() => navigateTo("admin")}><LayoutDashboard size={16} /> Área do admin</button>
           </nav>
-          <div className="header-actions"><button className="header-help" aria-label="Ajuda"><CircleHelp size={18} /></button><button className="avatar-button" aria-label="Perfil"><UserRound size={17} /></button><button className="mobile-menu-button" onClick={() => setMobileMenu((value) => !value)} aria-label="Abrir menu">{mobileMenu ? <X size={21} /> : <Menu size={21} />}</button></div>
+          <div className="header-actions"><button className="header-help" aria-label="Ajuda"><CircleHelp size={18} /></button>
+            <button
+              className={`avatar-button ${userAuthed ? "avatar-button--logged" : ""}`}
+              type="button"
+              aria-label={
+                userAuthed
+                  ? `Conta de ${userName || "usuário"}`
+                  : "Entrar ou criar conta"
+              }
+              onClick={() => {
+                if (userAuthed) {
+                  navigateTo("history");
+                } else {
+                  setSelectedMachine(null);
+                  setSelectedProfile(null);
+                  setActiveTab("user-login");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+            >
+              <span className="avatar-button__icon">
+                <UserRound size={17} />
+              </span>
+
+              {userAuthed && (
+                <span className="avatar-button__name">
+                  {userName || userEmail.split("@")[0]}
+                </span>
+              )}
+            </button>
+
+            <button className="mobile-menu-button" onClick={() => setMobileMenu((value) => !value)} aria-label="Abrir menu">{mobileMenu ? <X size={21} /> : <Menu size={21} />}</button></div>
         </div>
       </header>
 
@@ -1662,7 +1981,16 @@ export default function Home() {
             setPlaylistCategory("Todos");
           }}
         />
-
+      ) : activeTab === "user-login" ? (
+        <UserAuth
+          onSuccess={(email, name) => {
+            setUserAuthed(true);
+            setUserEmail(email);
+            setUserName(name);
+            setActiveTab("explore");
+          }}
+          onBack={() => navigateTo("explore")}
+        />
       ) : activeTab === "admin" && !adminAuthed ? (
         <AdminLogin onLogin={handleLogin} onBack={() => navigateTo("explore")} />
       ) : activeTab === "admin" ? (
